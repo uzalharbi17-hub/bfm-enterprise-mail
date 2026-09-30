@@ -10,33 +10,192 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuditLogRouteImport } from './routes/audit-log'
+import { Route as CampaignsRouteImport } from './routes/campaigns'
+import { Route as ComposeRouteImport } from './routes/compose'
+import { Route as ContactsRouteImport } from './routes/contacts'
+import { Route as GroupsRouteImport } from './routes/groups'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as SenderAccountsRouteImport } from './routes/sender-accounts'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TemplatesRouteImport } from './routes/templates'
+import { Route as UsersRouteImport } from './routes/users'
+import { Route as CampaignsCampaignIdRouteImport } from './routes/campaigns.$campaignId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuditLogRoute = AuditLogRouteImport.update({
+  id: '/audit-log',
+  path: '/audit-log',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CampaignsRoute = CampaignsRouteImport.update({
+  id: '/campaigns',
+  path: '/campaigns',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComposeRoute = ComposeRouteImport.update({
+  id: '/compose',
+  path: '/compose',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactsRoute = ContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GroupsRoute = GroupsRouteImport.update({
+  id: '/groups',
+  path: '/groups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SenderAccountsRoute = SenderAccountsRouteImport.update({
+  id: '/sender-accounts',
+  path: '/sender-accounts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplatesRoute = TemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UsersRoute = UsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CampaignsCampaignIdRoute = CampaignsCampaignIdRouteImport.update({
+  id: '/$campaignId',
+  path: '/$campaignId',
+  getParentRoute: () => CampaignsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/audit-log': typeof AuditLogRoute
+  '/campaigns': typeof CampaignsRouteWithChildren
+  '/compose': typeof ComposeRoute
+  '/contacts': typeof ContactsRoute
+  '/groups': typeof GroupsRoute
+  '/login': typeof LoginRoute
+  '/reports': typeof ReportsRoute
+  '/sender-accounts': typeof SenderAccountsRoute
+  '/settings': typeof SettingsRoute
+  '/templates': typeof TemplatesRoute
+  '/users': typeof UsersRoute
+  '/campaigns/$campaignId': typeof CampaignsCampaignIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/audit-log': typeof AuditLogRoute
+  '/campaigns': typeof CampaignsRouteWithChildren
+  '/compose': typeof ComposeRoute
+  '/contacts': typeof ContactsRoute
+  '/groups': typeof GroupsRoute
+  '/login': typeof LoginRoute
+  '/reports': typeof ReportsRoute
+  '/sender-accounts': typeof SenderAccountsRoute
+  '/settings': typeof SettingsRoute
+  '/templates': typeof TemplatesRoute
+  '/users': typeof UsersRoute
+  '/campaigns/$campaignId': typeof CampaignsCampaignIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/audit-log': typeof AuditLogRoute
+  '/campaigns': typeof CampaignsRouteWithChildren
+  '/compose': typeof ComposeRoute
+  '/contacts': typeof ContactsRoute
+  '/groups': typeof GroupsRoute
+  '/login': typeof LoginRoute
+  '/reports': typeof ReportsRoute
+  '/sender-accounts': typeof SenderAccountsRoute
+  '/settings': typeof SettingsRoute
+  '/templates': typeof TemplatesRoute
+  '/users': typeof UsersRoute
+  '/campaigns/$campaignId': typeof CampaignsCampaignIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/audit-log'
+    | '/campaigns'
+    | '/compose'
+    | '/contacts'
+    | '/groups'
+    | '/login'
+    | '/reports'
+    | '/sender-accounts'
+    | '/settings'
+    | '/templates'
+    | '/users'
+    | '/campaigns/$campaignId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/audit-log'
+    | '/campaigns'
+    | '/compose'
+    | '/contacts'
+    | '/groups'
+    | '/login'
+    | '/reports'
+    | '/sender-accounts'
+    | '/settings'
+    | '/templates'
+    | '/users'
+    | '/campaigns/$campaignId'
+  id:
+    | '__root__'
+    | '/'
+    | '/audit-log'
+    | '/campaigns'
+    | '/compose'
+    | '/contacts'
+    | '/groups'
+    | '/login'
+    | '/reports'
+    | '/sender-accounts'
+    | '/settings'
+    | '/templates'
+    | '/users'
+    | '/campaigns/$campaignId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuditLogRoute: typeof AuditLogRoute
+  CampaignsRoute: typeof CampaignsRouteWithChildren
+  ComposeRoute: typeof ComposeRoute
+  ContactsRoute: typeof ContactsRoute
+  GroupsRoute: typeof GroupsRoute
+  LoginRoute: typeof LoginRoute
+  ReportsRoute: typeof ReportsRoute
+  SenderAccountsRoute: typeof SenderAccountsRoute
+  SettingsRoute: typeof SettingsRoute
+  TemplatesRoute: typeof TemplatesRoute
+  UsersRoute: typeof UsersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +207,118 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/audit-log': {
+      id: '/audit-log'
+      path: '/audit-log'
+      fullPath: '/audit-log'
+      preLoaderRoute: typeof AuditLogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/campaigns': {
+      id: '/campaigns'
+      path: '/campaigns'
+      fullPath: '/campaigns'
+      preLoaderRoute: typeof CampaignsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compose': {
+      id: '/compose'
+      path: '/compose'
+      fullPath: '/compose'
+      preLoaderRoute: typeof ComposeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contacts': {
+      id: '/contacts'
+      path: '/contacts'
+      fullPath: '/contacts'
+      preLoaderRoute: typeof ContactsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/groups': {
+      id: '/groups'
+      path: '/groups'
+      fullPath: '/groups'
+      preLoaderRoute: typeof GroupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sender-accounts': {
+      id: '/sender-accounts'
+      path: '/sender-accounts'
+      fullPath: '/sender-accounts'
+      preLoaderRoute: typeof SenderAccountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/templates': {
+      id: '/templates'
+      path: '/templates'
+      fullPath: '/templates'
+      preLoaderRoute: typeof TemplatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/users': {
+      id: '/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof UsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/campaigns/$campaignId': {
+      id: '/campaigns/$campaignId'
+      path: '/$campaignId'
+      fullPath: '/campaigns/$campaignId'
+      preLoaderRoute: typeof CampaignsCampaignIdRouteImport
+      parentRoute: typeof CampaignsRoute
+    }
   }
 }
 
+interface CampaignsRouteChildren {
+  CampaignsCampaignIdRoute: typeof CampaignsCampaignIdRoute
+}
+
+const CampaignsRouteChildren: CampaignsRouteChildren = {
+  CampaignsCampaignIdRoute: CampaignsCampaignIdRoute,
+}
+
+const CampaignsRouteWithChildren = CampaignsRoute._addFileChildren(
+  CampaignsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuditLogRoute: AuditLogRoute,
+  CampaignsRoute: CampaignsRouteWithChildren,
+  ComposeRoute: ComposeRoute,
+  ContactsRoute: ContactsRoute,
+  GroupsRoute: GroupsRoute,
+  LoginRoute: LoginRoute,
+  ReportsRoute: ReportsRoute,
+  SenderAccountsRoute: SenderAccountsRoute,
+  SettingsRoute: SettingsRoute,
+  TemplatesRoute: TemplatesRoute,
+  UsersRoute: UsersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
