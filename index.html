@@ -1,508 +1,77 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07110d">
-<link rel="manifest" href="manifest.json">
-<title>بلوت | حاسبة الصكات</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#07110d"><link rel="manifest" href="manifest.json"><title>بلوت | حاسبة الصكات</title>
 <style>
-:root{--bg:#06100c;--panel:#0d1914;--panel2:#10231b;--line:#1d382b;--gold:#d6ad55;--gold2:#f1d38a;--text:#f6f5ef;--muted:#94a79d;--green:#55c58a;--red:#b94b58;--shadow:0 18px 60px #0008}
-*{box-sizing:border-box}
-html{background:var(--bg)}
-body{margin:0;background:radial-gradient(circle at 50% -10%,#173b2a 0,#07110d 38%,#040806 100%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Tahoma,Arial,sans-serif;min-height:100vh}
-button,input,select{font:inherit}
-button{cursor:pointer}
-.app{width:min(680px,100%);margin:auto;padding:18px 14px calc(35px + env(safe-area-inset-bottom))}
-.hide{display:none!important}
-.top{padding:12px 4px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.logo{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(145deg,#e2bd68,#8b6b2e);color:#10130f;font-size:25px;box-shadow:0 10px 30px #c59d4b33}
-.top h1{margin:0;font-size:22px;letter-spacing:-.5px}
-.top p{margin:3px 0 0;color:var(--muted);font-size:12px}
-.ghost{border:1px solid var(--line);background:#0b1511;color:#d8e2dc;border-radius:13px;padding:10px 12px;font-size:12px}
-.hero{padding:28px 20px 22px;border:1px solid var(--line);border-radius:28px;background:linear-gradient(145deg,#10271d,#0a1511 70%);box-shadow:var(--shadow);position:relative;overflow:hidden}
-.hero:after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;background:#d6ad5514;left:-70px;top:-70px}
-.hero .eyebrow{color:var(--gold2);font-size:11px;font-weight:800;letter-spacing:1px}
-.hero h2{font-size:31px;line-height:1.2;margin:8px 0}
-.hero p{color:#aebdb5;margin:0;line-height:1.7;font-size:13px}
-.section{margin-top:13px;border:1px solid var(--line);border-radius:24px;background:rgba(13,25,20,.92);padding:17px;box-shadow:0 12px 35px #0003}
-.section h3{margin:0 0 13px;font-size:15px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.field{margin:0 0 10px}
-.field label{display:block;color:#9eafa7;font-size:11px;margin:0 0 6px}
-input,select{width:100%;border:1px solid #274334;background:#08120e;color:#fff;border-radius:14px;padding:13px 12px;outline:none}
-input:focus,select:focus{border-color:#a9823d;box-shadow:0 0 0 3px #d6ad5512}
-input[type=number]{font-size:27px;font-weight:900;text-align:center;padding:13px}
-.btn{width:100%;border:0;border-radius:15px;padding:14px 15px;margin-top:8px;font-weight:850;font-size:14px;transition:.18s transform,.18s opacity}
-.btn:active{transform:scale(.98)}
-.primary{background:linear-gradient(135deg,#f0d18a,#b58b3c);color:#10120e;box-shadow:0 10px 25px #c59d4b25}
-.secondary{background:#172a21;color:#e9eee9;border:1px solid #294638}
-.gold{background:#3a2d15;color:#f4d98e;border:1px solid #735a2c}
-.danger{background:#35191f;color:#ffc3c9;border:1px solid #6a3039}
-.row{display:flex;gap:8px}.row>*{flex:1}
-.notice{padding:11px 12px;border-radius:14px;background:#0a1510;border:1px dashed #2b4c3b;color:#9eb2a7;font-size:11px;line-height:1.7;margin-top:10px}
-.gameHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.gameHead .title{font-size:20px;font-weight:900}.date{font-size:11px;color:var(--muted);margin-top:3px}
-.scoreGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.teamCard{background:linear-gradient(180deg,#11251b,#09130f);border:1px solid #254536;border-radius:20px;padding:14px;position:relative;overflow:hidden}
-.teamCard:before{content:"";position:absolute;top:0;right:0;left:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
-.teamName{font-weight:900;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wins{color:var(--gold2);font-size:11px;margin-top:4px}
-.scoreInput{margin-top:12px}
-.smallBtn{padding:10px 8px;font-size:12px}
-.standings{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.stand{background:#08120e;border:1px solid #1f382c;border-radius:14px;padding:10px;text-align:center}
-.stand strong{display:block;font-size:19px}.stand span{font-size:10px;color:var(--muted)}
-.dealerBox{background:linear-gradient(135deg,#16170f,#0c1510);border:1px solid #5c4a26;border-radius:20px;padding:15px}
-.dealerLine{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.dealerLine span{font-size:11px;color:#bca76e}.dealerLine b{font-size:17px;color:#f0d38b}
-.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:13px}
-.cardFace{min-height:88px;background:linear-gradient(160deg,#fff,#e8ece8);color:#111;border-radius:14px;padding:9px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 7px 18px #0005}
-.cardFace .rank{font-size:23px;font-weight:950;line-height:1}.cardFace .suit{font-size:18px}.cardFace small{font-size:9px;color:#68706c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.red{color:#b52b38!important}
-.log{display:flex;flex-direction:column;gap:7px;max-height:250px;overflow:auto}
-.logRow{display:flex;justify-content:space-between;align-items:center;padding:10px 11px;background:#08120e;border:1px solid #1a3025;border-radius:13px;font-size:11px}
-.logRow b{font-size:13px;color:#e9d69e}
-.finishHero{text-align:center;padding:28px 18px}
-.trophy{font-size:48px}
-.resultTitle{font-size:12px;color:var(--muted);margin-top:5px}
-.winner{font-size:27px;font-weight:950;margin-top:7px;color:#f1d38a}
-.finalScore{font-size:66px;font-weight:950;letter-spacing:-3px;margin:5px 0}
-.history{margin-top:15px;text-align:right}
-.historyTitle{font-size:12px;color:var(--muted);margin-bottom:8px}
-.historyRow{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;background:#08120e;border:1px solid #1d3428;border-radius:13px;margin-top:7px;font-size:11px}
-.historyRow b{color:#f0d38b}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.actions .btn{margin:0}
-.full{grid-column:1/-1}
-.voiceGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.range{width:100%;accent-color:var(--gold)}
-footer{text-align:center;color:#52645b;font-size:10px;margin-top:20px}
-@media(max-width:430px){.grid2,.scoreGrid{gap:8px}.hero h2{font-size:27px}.section{padding:14px}.finalScore{font-size:56px}}
+:root{--bg:#06100c;--p:#0d1a14;--p2:#10241a;--line:#254334;--gold:#d8b35d;--gold2:#f2d98f;--text:#f7f5ee;--muted:#91a69b;--ok:#61d49b;--bad:#e87883}*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg)}body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Tahoma,Arial;color:var(--text);background:radial-gradient(circle at 50% -5%,#1b432f 0,#07110d 42%,#030705 100%)}button,input,select{font:inherit}button{cursor:pointer}.app{width:min(720px,100%);margin:auto;padding:15px 13px calc(35px + env(safe-area-inset-bottom))}.hide{display:none!important}.top{display:flex;align-items:center;justify-content:space-between;padding:10px 3px 18px}.brand{display:flex;gap:10px;align-items:center}.logo{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(145deg,#efcf78,#8c6b2d);color:#10130f;font-size:24px}.top h1{margin:0;font-size:21px}.top p{margin:3px 0 0;color:var(--muted);font-size:11px}.iconbtn,.ghost{border:1px solid var(--line);background:#0a1510;color:#dce5df;border-radius:13px;padding:10px 12px;font-size:12px}.hero,.card,.scoreCard{background:linear-gradient(180deg,#10231a,#0a1611);border:1px solid var(--line);border-radius:22px;box-shadow:0 18px 50px #0006}.hero{padding:23px 18px;margin-bottom:12px}.hero h2{margin:0 0 7px;font-size:25px}.hero p{margin:0;color:var(--muted);font-size:13px;line-height:1.7}.card{padding:15px;margin:12px 0}.card h3{margin:0 0 12px;font-size:14px;color:var(--gold2)}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.field{margin:9px 0}.field label{display:block;color:#aebdb6;font-size:11px;margin:0 0 6px}.field input,.field select,select,input[type=number]{width:100%;background:#07110d;border:1px solid #294737;color:#f6f4ed;border-radius:13px;padding:12px;outline:none}.btn{width:100%;border:0;border-radius:14px;padding:13px;margin-top:9px;font-weight:800}.primary{background:linear-gradient(135deg,#e2c16c,#a27d31);color:#10130f}.secondary{background:#10231a;border:1px solid #31523e;color:#e7eee9}.danger{background:#2b1216;border:1px solid #5b2830;color:#ffb8bf}.chips{display:grid;grid-template-columns:1fr 1fr;gap:8px}.chip{border:1px solid #2a4938;background:#07110d;color:#dce5df;border-radius:13px;padding:11px;font-weight:800}.chip.active{border-color:var(--gold);background:#332813;color:var(--gold2)}.scores{display:grid;grid-template-columns:1fr 42px 1fr;gap:8px;align-items:stretch}.scoreCard{padding:14px;text-align:center}.scoreCard .name{font-weight:900;font-size:15px}.scoreCard .wins{font-size:10px;color:var(--gold);margin-top:4px}.bigscore{font-size:36px;font-weight:900;margin:7px 0;color:var(--gold2)}.arrow{display:grid;place-items:center;font-size:26px;color:var(--gold)}.bar{height:8px;background:#07110d;border-radius:20px;overflow:hidden;border:1px solid #1d3328}.bar i{display:block;height:100%;background:linear-gradient(90deg,#8f6b2e,#e5c773);width:0}.notice{padding:11px;border:1px solid #284536;background:#07110d;border-radius:13px;color:#9fb1a8;font-size:11px;line-height:1.7;margin-top:10px}.good{color:var(--ok)}.bad{color:var(--bad)}.small{font-size:10px;color:var(--muted);line-height:1.6}.roundrow{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #1b3025;padding:9px 0;font-size:12px}.roundrow:last-child{border-bottom:0}.roundrow b{color:var(--gold2)}.history{max-height:260px;overflow:auto}.winner{font-size:30px;font-weight:900;text-align:center;color:var(--gold2);padding:18px}.modal{position:fixed;inset:0;background:#000b;display:grid;place-items:end center;z-index:20;padding:10px}.sheet{width:min(720px,100%);max-height:88vh;overflow:auto;background:#0b1712;border:1px solid var(--line);border-radius:24px;padding:17px}.sheet h3{margin:0 0 12px}.list{display:grid;gap:7px}.list button{text-align:right;background:#07110d;color:#e8eee9;border:1px solid #294637;border-radius:12px;padding:11px}canvas{width:100%;border-radius:16px;margin-top:10px}.tag{display:inline-block;border:1px solid #31523e;border-radius:99px;padding:5px 8px;color:#b9c8c1;font-size:10px;margin:2px}.tricks{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.trick{padding:9px 4px;border-radius:12px;border:1px solid #294637;background:#07110d;color:#dce5df;font-size:10px}@media(max-width:430px){.scores{grid-template-columns:1fr 28px 1fr}.bigscore{font-size:30px}.grid3{grid-template-columns:1fr 1fr}}
+</style></head><body><div class="app">
+<header class="top"><div class="brand"><div class="logo">♠</div><div><h1>بلوت</h1><p>حاسبة الصكات الكاملة</p></div></div><button class="iconbtn" onclick="openSettings()">⚙️</button></header>
+<section id="setup"><div class="hero"><h2>ابدأ صكة جديدة</h2><p>أربعة لاعبين، فريقين، موزع، مزايدة، صن أو حكم، مشاريع، أكلات، وحسبة إلى ١٥٢.</p></div>
+<div class="card"><h3>👥 اللاعبين</h3><div class="grid2"><div class="field"><label>لاعب 1</label><input id="p0" placeholder="اسم اللاعب"></div><div class="field"><label>لاعب 2</label><input id="p1" placeholder="اسم اللاعب"></div><div class="field"><label>لاعب 3</label><input id="p2" placeholder="اسم اللاعب"></div><div class="field"><label>لاعب 4</label><input id="p3" placeholder="اسم اللاعب"></div></div>
+<div class="grid2"><div class="field"><label>الفريق الأول</label><input id="t0" placeholder="اسم الفريق"></div><div class="field"><label>الفريق الثاني</label><input id="t1" placeholder="اسم الفريق"></div></div><button class="btn primary" onclick="start()">ابدأ الصكة</button></div>
+<div class="notice">الصكة تنتهي عند ١٥٢، وإذا تجاوز الفريقان ١٥٢ فالفوز لصاحب الأبناط الأعلى. citeturn0search17turn0search5</div></section>
 
-.ruleGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.ruleChip{border:1px solid #294638;background:#08120e;color:#dce7e0;border-radius:13px;padding:11px;text-align:center;font-size:12px;font-weight:800}
-.ruleChip.active{border-color:#caa34f;background:#352a14;color:#f4d98e}
-.arrowBox{display:flex;align-items:center;justify-content:center;gap:7px;color:#d6ad55;font-size:22px;font-weight:900;padding:8px}
-.roundCalc{background:#08120e;border:1px solid #1f382c;border-radius:18px;padding:13px}
-.calcTotal{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #193025}
-.calcTotal:last-child{border-bottom:0}
-.calcTotal b{font-size:18px;color:#f1d38a}
-.projectGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.helper{font-size:10px;color:#82968c;line-height:1.6;margin-top:8px}
-.statusGood{color:#65d79a}.statusBad{color:#ff9ba5}
-</style>
-</head>
-<body>
-<main class="app">
+<section id="game" class="hide"><div class="scores"><div class="scoreCard"><div id="gT0" class="name"></div><div id="gW0" class="wins"></div><div id="s0" class="bigscore">0</div><div class="bar"><i id="b0"></i></div></div><div class="arrow">←</div><div class="scoreCard"><div id="gT1" class="name"></div><div id="gW1" class="wins"></div><div id="s1" class="bigscore">0</div><div class="bar"><i id="b1"></i></div></div></div>
 
-<section id="setup">
-  <header class="top">
-    <div style="display:flex;align-items:center;gap:10px"><div class="logo">♠</div><div><h1>بلوت</h1><p>حاسبة الصكات</p></div></div>
-    <button class="ghost" onclick="openVoice()">🔊 الصوت</button>
-  </header>
+<div class="card"><h3>🃏 المزايدة</h3><div class="notice" id="dealInfo">اسحب الموزع لبدء الجولة.</div><button class="btn secondary" onclick="drawDealer()">🎴 سحب الموزع</button>
+<div id="bidBox" class="hide"><div class="field"><label>الورقة المكشوفة / الزات</label><select id="openSuit"><option>♠</option><option>♥</option><option>♦</option><option>♣</option></select></div>
+<div class="chips"><button id="sun" class="chip active" onclick="chooseMode('sun')">☀️ صن</button><button id="hokm" class="chip" onclick="chooseMode('hokm')">♣️ حكم</button></div>
+<div class="field"><label>نوع الحكم</label><select id="trump"><option value="♠">♠ سبيد</option><option value="♥">♥ هارت</option><option value="♦">♦ دايموند</option><option value="♣">♣ كلوب</option></select></div>
+<div class="field"><label>المشتري</label><select id="buyer"></select></div><div class="field"><label>التصعيد</label><select id="raise"><option value="1">عادي</option><option value="2">دبل</option><option value="3">ثري</option><option value="4">فور</option><option value="coffee">قهوة</option></select></div>
+<button class="btn primary" onclick="confirmContract()">تأكيد العقد</button></div></div>
 
-  <div class="hero">
-    <div class="eyebrow">BALLOOT SCORE</div>
-    <h2>صكة مرتبة، ونتيجتك محفوظة.</h2>
-    <p>سجّل أسماء اللاعبين والفرق، حدّد الموزع بالقرعة، واكتب النتيجة بنفسك. وبعد كل صكة تقدر تكمل بنفس الأسماء وتبني سجل الفوز.</p>
-  </div>
+<div id="playBox" class="card hide"><h3>🎯 تسجيل الأكلات</h3><div class="notice" id="contractText"></div><div class="grid2"><div class="field"><label>الفريق الفائز بالأكلة</label><select id="trickWinner"></select></div><div class="field"><label>أبناط الورق</label><input id="trickPoints" type="number" min="0" max="30" value="0" inputmode="numeric"></div></div>
+<div class="field"><label>هل هذه آخر أكلة؟</label><select id="lastTrick"><option value="0">لا</option><option value="1">نعم — +10</option></select></div><button class="btn primary" onclick="addTrick()">إضافة الأكلة</button><div id="trickList"></div></div>
 
-  <div class="section">
-    <h3>👥 أسماء اللاعبين</h3>
-    <div class="grid2">
-      <div class="field"><label>اللاعب 1</label><input id="p1" placeholder="مثلاً: عبد الرحمن"></div>
-      <div class="field"><label>اللاعب 2</label><input id="p2" placeholder="مثلاً: علي"></div>
-      <div class="field"><label>اللاعب 3</label><input id="p3" placeholder="مثلاً: خالد"></div>
-      <div class="field"><label>اللاعب 4</label><input id="p4" placeholder="مثلاً: محمد"></div>
-    </div>
-  </div>
+<div class="card"><h3>🧮 تسجيل النتيجة</h3><div class="small">بعد تسجيل الأكلات تُنقل الحسبة تلقائيًا. وتقدر تستخدم الإدخال السريع إذا تبغى تدخل قيد الجولة بنفسك.</div><div class="grid2"><div class="field"><label>قيد الجولة — الفريق 1</label><input id="q0" type="number" min="0" value="0" inputmode="numeric"></div><div class="field"><label>قيد الجولة — الفريق 2</label><input id="q1" type="number" min="0" value="0" inputmode="numeric"></div></div>
+<div class="grid2"><div class="field"><label>المشروع — الفريق 1</label><select id="pr0"></select></div><div class="field"><label>المشروع — الفريق 2</label><select id="pr1"></select></div></div>
+<label style="display:flex;gap:8px;align-items:center;background:#07110d;border:1px solid #294637;border-radius:13px;padding:11px;font-size:12px"><input id="kaboot" type="checkbox" style="width:auto"> كبوت</label><div class="field"><label>فريق الكبوت</label><select id="kabootTeam"><option value="0">الفريق 1</option><option value="1">الفريق 2</option></select></div>
+<button class="btn primary" onclick="recordRound()">✓ تسجيل الجولة</button><button class="btn secondary" onclick="undo()">↩️ تراجع عن آخر جولة</button></div>
+<div class="card"><h3>📜 سجل الجولة</h3><div id="roundHistory" class="history"></div></div></section>
 
-  <div class="section">
-    <h3>🏆 أسماء الفرق</h3>
-    <div class="grid2">
-      <div class="field"><label>الفريق الأول</label><input id="t1" placeholder="مثلاً: النشامى"></div>
-      <div class="field"><label>الفريق الثاني</label><input id="t2" placeholder="مثلاً: الصقور"></div>
-    </div>
-    <div class="notice">بعد انتهاء الصكة، تقدر تختار <b>صكة جديدة بنفس الأسماء</b> ويستمر عدّاد الفوز، أو تبدأ بأسماء جديدة.</div>
-  </div>
-
-  <button class="btn primary" onclick="startNewSession()">ابدأ الجلسة</button>
-</section>
-
-<section id="game" class="hide">
-  <header class="top">
-    <div><div class="gameHead"><div><div class="title">جلسة البلوت</div><div id="date" class="date"></div></div></div></div>
-    <button class="ghost" onclick="openVoice()">🔊 الصوت</button>
-  </header>
-
-  <div class="section" style="padding:13px">
-    <div class="standings">
-      <div class="stand"><strong id="topWins1">0</strong><span id="topWinsName1">فوز</span></div>
-      <div class="stand"><strong id="topWins2">0</strong><span id="topWinsName2">فوز</span></div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="dealerBox">
-      <div class="dealerLine"><span>الموزع</span><b id="dealer">اضغط قرعة</b></div>
-      <div id="cards" class="cards"></div>
-      <button class="btn gold" onclick="deal()">🃏 قرعة جديدة</button>
-    </div>
-  </div>
-
-  <div class="section">
-    <h3>🎴 تسجيل الجولة</h3>
-    <div class="ruleGrid">
-      <button id="sunBtn" class="ruleChip active" onclick="setMode('sun')">☀️ صن</button>
-      <button id="hokmBtn" class="ruleChip" onclick="setMode('hokm')">♣️ حكم</button>
-    </div>
-    <div class="field" style="margin-top:10px"><label>المشتري</label>
-      <select id="buyer"><option value="0"></option><option value="1"></option></select>
-    </div>
-    <div class="field"><label>مضاعفة الجولة</label>
-      <select id="multiplier">
-        <option value="1">عادي</option>
-        <option value="2">دبل ×2</option>
-        <option value="3">ثري ×3</option>
-        <option value="4">فور ×4</option>
-        <option value="coffee">قهوة — الفائز بالجولة يحسم الصكة</option>
-      </select>
-    </div>
-    <div class="arrowBox">← <span>اتجاه اللعب</span> ←</div>
-    <div class="scoreGrid">
-      <div class="teamCard">
-        <div id="team1" class="teamName"></div>
-        <div id="wins1" class="wins">0 فوز</div>
-        <label style="display:block;color:#9eafa7;font-size:10px;margin-top:10px">أبناط الجولة</label>
-        <input id="raw1" class="scoreInput" type="number" min="0" max="200" inputmode="numeric" value="0">
-        <div class="helper">أدخل أبناط الورق التي أخذها الفريق. في الصن/الحكم يحسب التطبيق نقاط الجولة تلقائيًا.</div>
-      </div>
-      <div class="teamCard">
-        <div id="team2" class="teamName"></div>
-        <div id="wins2" class="wins">0 فوز</div>
-        <label style="display:block;color:#9eafa7;font-size:10px;margin-top:10px">أبناط الجولة</label>
-        <input id="raw2" class="scoreInput" type="number" min="0" max="200" inputmode="numeric" value="0">
-        <div class="helper">يمكنك تعديل الرقم كيفما تريد قبل التسجيل.</div>
-      </div>
-    </div>
-    <div class="roundCalc" style="margin-top:10px">
-      <div class="calcTotal"><span>نقاط الجولة</span><b id="roundPoints">0 - 0</b></div>
-      <div class="calcTotal"><span>المشاريع</span><b id="projectPoints">0 - 0</b></div>
-      <div class="calcTotal"><span>الإضافة النهائية</span><b id="roundFinal">0 - 0</b></div>
-      <div id="roundStatus" class="helper">أدخل أبناط الجولة وستظهر الحسبة هنا.</div>
-    </div>
-    <div style="margin-top:12px"><label style="display:block;color:#9eafa7;font-size:11px;margin-bottom:7px">المشاريع</label>
-      <div class="projectGrid">
-        <select id="project1"><option value="0">فريق 1 — بدون مشروع</option><option value="sara">سرا</option><option value="50">خمسين</option><option value="100">مائة</option><option value="400">أربعمائة</option><option value="baloot">بلوت</option></select>
-        <select id="project2"><option value="0">فريق 2 — بدون مشروع</option><option value="sara">سرا</option><option value="50">خمسين</option><option value="100">مائة</option><option value="400">أربعمائة</option><option value="baloot">بلوت</option></select>
-      </div>
-      <div class="helper">القيم تختلف بين الصن والحكم؛ التطبيق يحسبها تلقائيًا. الأربعمائة للصن، والبلوت للحكم.</div>
-    </div>
-    <div style="margin-top:12px">
-      <label style="display:flex;gap:8px;align-items:center;background:#08120e;border:1px solid #1f382c;border-radius:13px;padding:11px;font-size:12px;margin-bottom:8px"><input id="lastTrick" type="checkbox" checked style="width:auto"> آخر أكلة +10 أبناط</label>
-      <div class="grid2">
-        <label style="display:flex;gap:8px;align-items:center;background:#08120e;border:1px solid #1f382c;border-radius:13px;padding:11px;font-size:12px">
-          <input id="kaboot" type="checkbox" style="width:auto"> كبوت
-        </label>
-        <select id="kabootTeam"><option value="0">الكبوت للفريق 1</option><option value="1">الكبوت للفريق 2</option></select>
-      </div>
-    </div>
-    <button class="btn primary" onclick="recordRound()">✓ تسجيل الجولة</button>
-    <div class="row">
-      <button class="btn secondary" onclick="speakCurrent()">🔊 نطق النتيجة</button>
-      <button class="btn danger" onclick="finish()">إنهاء الصكة</button>
-    </div>
-    <div class="notice">الصكة تنتهي تلقائيًا عند وصول فريق إلى <b>152 بنط</b>. وإذا تجاوز الفريقان 152، يفوز صاحب العدد الأعلى. citeturn0search0</div>
-  </div>
-
-  <div class="section">
-    <h3>🧾 سجل تغييرات النتيجة</h3>
-    <div id="log" class="log"><div class="notice">اكتب النتيجة التي تريدها ثم اضغط «تسجيل النتيجة».</div></div>
-  </div>
-</section>
-
-<section id="finish" class="hide">
-  <header class="top">
-    <div><div class="title">نتيجة الصكة</div><div id="fdate" class="date"></div></div>
-    <button class="ghost" onclick="openVoice()">🔊 الصوت</button>
-  </header>
-
-  <div class="section finishHero">
-    <div class="trophy">🏆</div>
-    <div class="resultTitle">الفائز بهذه الصكة</div>
-    <div id="winner" class="winner"></div>
-    <div id="final" class="finalScore"></div>
-    <div id="summary"></div>
-
-    <div class="history">
-      <div class="historyTitle">سجل الصكات السابقة</div>
-      <div id="historyList"></div>
-    </div>
-
-    <canvas id="canvas" width="1080" height="1350" style="width:100%;border-radius:18px;margin-top:14px"></canvas>
-
-    <div class="actions">
-      <button class="btn primary" onclick="share()">📤 مشاركة النتيجة</button>
-      <button class="btn secondary" onclick="newSame()">صكة جديدة بنفس الأسماء</button>
-      <button class="btn gold full" onclick="newNames()">صكة جديدة بأسماء جديدة</button>
-    </div>
-  </div>
-</section>
-
-<div id="voiceModal" class="hide" style="position:fixed;inset:0;background:#000b;z-index:20;padding:18px;display:grid;place-items:end center">
-  <div style="width:min(680px,100%);background:#0d1914;border:1px solid #294638;border-radius:25px;padding:17px;box-shadow:0 25px 80px #000">
-    <div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">إعدادات الصوت</h3><button class="ghost" onclick="closeVoice()">إغلاق</button></div>
-    <p style="color:#9eafa7;font-size:11px;line-height:1.7">تقدر تختار صوتًا من الأصوات الموجودة على جهازك. إذا كان صوت أنثى عربي متوفرًا، التطبيق يحاول اختياره تلقائيًا. توفر الأصوات يعتمد على iPhone وإعدادات اللغة.</p>
-    <div class="field"><label>الصوت</label><select id="voiceSelect"></select></div>
-    <div class="voiceGrid">
-      <div class="field"><label>سرعة النطق</label><input id="rate" class="range" type="range" min=".65" max="1.1" step=".05" value=".88"></div>
-      <button class="btn secondary" style="margin:0;align-self:end" onclick="testVoice()">🔊 تجربة الصوت</button>
-    </div>
-  </div>
+<section id="finish" class="hide"><div class="hero"><h2>🏆 انتهت الصكة</h2><p id="finishDate"></p></div><div class="card"><div id="winner" class="winner"></div><div class="scores"><div class="scoreCard"><div id="fT0" class="name"></div><div id="fS0" class="bigscore">0</div><div id="fW0" class="wins"></div></div><div class="arrow">←</div><div class="scoreCard"><div id="fT1" class="name"></div><div id="fS1" class="bigscore">0</div><div id="fW1" class="wins"></div></div></div>
+<button class="btn primary" onclick="sameNames()">🔁 صكة جديدة بنفس الأسماء</button><button class="btn secondary" onclick="newNames()">👥 صكة بأسماء جديدة</button><button class="btn secondary" onclick="speakResult()">🔊 نطق النتيجة</button><canvas id="resultCanvas" width="1080" height="1350"></canvas><button class="btn secondary" onclick="shareResult()">📤 مشاركة النتيجة</button></div><div class="card"><h3>📚 الصكات السابقة</h3><div id="matchHistory"></div></div></section>
 </div>
 
-<footer>بلوت • مجاني • بدون اشتراك</footer>
-</main>
+<div id="settings" class="modal hide"><div class="sheet"><h3>🔊 إعدادات الصوت</h3><div class="small">الأصوات المتاحة تعتمد على أصوات iPhone. إذا لم يظهر صوت عربي، أضف صوتًا عربيًا من إعدادات iPhone ثم أعد فتح الصفحة.</div><div class="field"><label>الصوت</label><select id="voiceSelect"></select></div><div class="field"><label>سرعة الصوت</label><input id="voiceRate" type="range" min=".7" max="1.25" step=".05" value=".9"></div><button class="btn primary" onclick="testVoice()">تجربة الصوت</button><button class="btn secondary" onclick="closeSettings()">إغلاق</button></div></div>
 
 <script>
-const $=id=>document.getElementById(id);
-const deck=["7♠","8♠","9♠","10♠","J♠","Q♠","K♠","A♠","7♥","8♥","9♥","10♥","J♥","Q♥","K♥","A♥","7♦","8♦","9♦","10♦","J♦","Q♦","K♦","A♦","7♣","8♣","9♣","10♣","J♣","Q♣","K♣","A♣"];
-const val=c=>parseInt(c)||({J:11,Q:12,K:13,A:14}[c[0]]||0);
-let P=[],T=[],S=[0,0],E=[],D="",DATE="",history=[],voices=[],pendingNewNames=false,gameMode="sun",roundPreview=[0,0];
-
-function dateNow(){return new Intl.DateTimeFormat("ar-SA-u-ca-gregory",{year:"numeric",month:"long",day:"numeric"}).format(new Date())}
-function startNewSession(){history=[];pendingNewNames=false;startRound()}
-function startRound(){
-  P=[1,2,3,4].map(i=>$("p"+i).value.trim()||"لاعب "+i);
-  T=[$("t1").value.trim()||"الفريق الأول",$("t2").value.trim()||"الفريق الثاني"];
-  S=[0,0];E=[];DATE=dateNow();
-  save();
-  $("team1").textContent=T[0];$("team2").textContent=T[1];$("date").textContent=DATE;
-  $("topWinsName1").textContent=T[0];$("topWinsName2").textContent=T[1];
-  $("game").classList.remove("hide");$("setup").classList.add("hide");$("finish").classList.add("hide");
-  $("score1")&&($("score1").value=0,$("score2").value=0);$("raw1").value=0;$("raw2").value=0;$("lastTrick").checked=true;$("kaboot").checked=false;refreshBuyerOptions();setMode("sun");update();deal();
-}
-function save(){
-  localStorage.setItem("baloot_state",JSON.stringify({P,T,S,E,D,DATE,history}));
-}
-function load(){
-  try{
-    const x=JSON.parse(localStorage.getItem("baloot_state")||"null");
-    if(!x||!x.T)return;
-    P=x.P||[];T=x.T||[];S=x.S||[0,0];E=x.E||[];D=x.D||"";DATE=x.DATE||dateNow();history=x.history||[];
-    if(P.length===4){P.forEach((v,i)=>$("p"+(i+1)).value=v);T.forEach((v,i)=>$("t"+(i+1)).value=v);renderWins();renderHistory();}
-  }catch(e){}
-}
-function wins(){
-  const w=[0,0];
-  history.forEach(r=>{if(r.winnerIndex===0)w[0]++;if(r.winnerIndex===1)w[1]++;});
-  return w;
-}
-function renderWins(){
-  const w=wins();
-  $("wins1").textContent=w[0]+" فوز";$("wins2").textContent=w[1]+" فوز";
-  $("topWins1").textContent=w[0];$("topWins2").textContent=w[1];
-}
-function deal(){
-  if(!P.length)return;
-  let pool=[...deck],d=P.map(p=>{let i=Math.floor(Math.random()*pool.length);return{p,c:pool.splice(i,1)[0]}}),h=d.reduce((a,b)=>val(b.c)>val(a.c)?b:a);
-  D=h.p;
-  $("dealer").textContent="التوزيع عند "+D;
-  $("cards").innerHTML=d.map(x=>{
-    const red=x.c.includes("♥")||x.c.includes("♦");
-    return '<div class="cardFace"><div><span class="rank '+(red?'red':'')+'">'+x.c.slice(0,-1)+'</span><span class="suit '+(red?'red':'')+'">'+x.c.slice(-1)+'</span></div><small>'+escapeHtml(x.p)+'</small></div>';
-  }).join("");
-  say("التوزيع عند "+D);
-}
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function setMode(mode){
-  gameMode=mode;
-  $("sunBtn").classList.toggle("active",mode==="sun");
-  $("hokmBtn").classList.toggle("active",mode==="hokm");
-  $("project1").value="0";$("project2").value="0";
-  $("multiplier").value="1";
-  const m=$("multiplier"); [...m.options].forEach(o=>o.disabled=(mode==="sun"&&(o.value==="3"||o.value==="4"||o.value==="coffee"))); m.value="1";
-  refreshBuyerOptions();previewRound();
-}
-function refreshBuyerOptions(){
-  $("buyer").innerHTML='<option value="0">'+escapeHtml(T[0]||"الفريق الأول")+'</option><option value="1">'+escapeHtml(T[1]||"الفريق الثاني")+'</option>';
-}
-function projectValue(v){
-  if(v==="0")return 0;
-  if(v==="sara")return gameMode==="sun"?4:2;
-  if(v==="50")return gameMode==="sun"?10:5;
-  if(v==="100")return gameMode==="sun"?20:10;
-  if(v==="400")return gameMode==="sun"?40:0;
-  if(v==="baloot")return gameMode==="hokm"?2:0;
-  return 0;
-}
-function convertPoints(raw,mode){
-  raw=Math.max(0,Number(raw)||0);
-  if(mode==="sun"){
-    if(raw%10===5)return raw/5;
-    return Math.round(raw/10)*2;
-  }
-  return Math.round(raw/10);
-}
-function previewRound(){
-  const a=(Number($("raw1").value)||0)+($("lastTrick").checked?10:0),b=(Number($("raw2").value)||0);
-  let p1=convertPoints(a,gameMode),p2=convertPoints(b,gameMode);
-  const buyer=Number($("buyer").value)||0;
-  const mult=$("multiplier").value;
-  const kaboot=$("kaboot").checked;
-  if(kaboot){
-    p1=0;p2=0;
-    const k=gameMode==="sun"?44:25; const kt=Number($("kabootTeam").value)||0;
-    if(mult!=="1"&&mult!=="coffee")p1=kt===0?k*Number(mult):0,p2=kt===1?k*Number(mult):0;
-    else {p1=kt===0?k:0;p2=kt===1?k:0;}
-  }
-  const proj1=projectValue($("project1").value),proj2=projectValue($("project2").value);
-  const factor=mult==="coffee"?1:Number(mult)||1;
-  const fp1=p1+(mult==="1"?proj1:gameMode==="hokm"&&(mult==="3"||mult==="4")?proj1:proj1*factor);
-  const fp2=p2+(mult==="1"?proj2:gameMode==="hokm"&&(mult==="3"||mult==="4")?proj2:proj2*factor);
-  roundPreview=[Math.max(0,Math.round(fp1)),Math.max(0,Math.round(fp2))];
-  $("roundPoints").textContent=p1+" - "+p2;
-  $("projectPoints").textContent=proj1+" - "+proj2;
-  $("roundFinal").textContent=roundPreview[0]+" - "+roundPreview[1];
-  let status="الحسبة جاهزة للتسجيل.";
-  if(a+b>0 && !kaboot){
-    const target=gameMode==="sun"?66:82;
-    if((buyer===0?a: b)<target)status='<span class="statusBad">تنبيه: أبناط المشتري أقل من حد النجاح المعتاد ('+target+').</span>';
-    else status='<span class="statusGood">المشتري تجاوز حد النجاح المعتاد ('+target+').</span>';
-  }
-  $("roundStatus").innerHTML=status;
-}
-function recordRound(){
-  previewRound();
-  const add=[...roundPreview];
-  S=[S[0]+add[0],S[1]+add[1]];
-  E.unshift({a:add[0],b:add[1],mode:gameMode,buyer:Number($("buyer").value),at:new Date().toLocaleTimeString("ar-SA",{hour:"2-digit",minute:"2-digit"})});
-  save();update();speakCurrent();
-  if($("multiplier").value==="coffee" || S[0]>=152 || S[1]>=152){
-    setTimeout(()=>autoFinish(),250);
-  }
-}
-function autoFinish(){
-  let idx=S[0]>S[1]?0:S[1]>S[0]?1:-1;
-  if(S[0]>=152&&S[1]>=152)idx=S[0]>S[1]?0:S[1]>S[0]?1:-1;
-  finishCore(idx);
-}
-function recordScore(){
-  recordRound();
-}
-function update(){
-  if($("score1")){$("score1").value=S[0];$("score2").value=S[1];} previewRound();
-  const w=wins();
-  $("wins1").textContent=w[0]+" فوز";$("wins2").textContent=w[1]+" فوز";$("topWins1").textContent=w[0];$("topWins2").textContent=w[1];
-  $("log").innerHTML=E.length?E.slice(0,20).map(e=>'<div class="logRow"><span>'+e.at+'</span><b>'+e.a+' - '+e.b+'</b></div>').join(""):'<div class="notice">اكتب النتيجة التي تريدها ثم اضغط «تسجيل النتيجة».</div>';
-}
-function speakCurrent(){
-  say(S[0]+" لـ "+T[0]+"، و "+S[1]+" لـ "+T[1]);
-}
-function finish(){
-  recordScoreSilent();
-  const idx=S[0]>S[1]?0:S[1]>S[0]?1:-1;
-  finishCore(idx);
-}
-function finishCore(idx){
-  const round={teams:[...T],scores:[...S],winnerIndex:idx,date:DATE};
-  history.push(round);save();
-  $("game").classList.add("hide");$("finish").classList.remove("hide");
-  const w=wins();
-  $("winner").textContent=idx<0?"تعادل":T[idx]+" فاز";
-  $("final").textContent=S[0]+" - "+S[1];
-  $("summary").innerHTML='<div class="notice">'+escapeHtml(T[0])+": "+w[0]+" فوز &nbsp; • &nbsp; "+escapeHtml(T[1])+": "+w[1]+" فوز</div>";
-  $("fdate").textContent=DATE;renderHistory();draw(idx);
-  if(idx<0)say("انتهت الصكة. النتيجة تعادل "+S[0]+" مقابل "+S[1]);
-  else say("انتهت الصكة. "+T[idx]+" فاز، والنتيجة "+S[0]+" مقابل "+S[1]+". سجل الفوز: "+w[idx]);
-}
-function recordScoreSilent(){
-  S=[Math.max(0,Number($("score1").value)||0),Math.max(0,Number($("score2").value)||0)];
-  save();
-}
-function renderHistory(){
-  const box=$("historyList");if(!box)return;
-  if(!history.length){box.innerHTML='<div class="notice">لا توجد صكات سابقة.</div>';return}
-  box.innerHTML=history.slice().reverse().map((r,i)=>{
-    const wi=r.winnerIndex;
-    return '<div class="historyRow"><span>الصكة '+(history.length-i)+' • '+escapeHtml(r.date)+'</span><b>'+(wi<0?'تعادل':escapeHtml(r.teams[wi]))+' • '+r.scores[0]+' - '+r.scores[1]+'</b></div>';
-  }).join("");
-}
-function newSame(){
-  pendingNewNames=false;
-  $("finish").classList.add("hide");$("game").classList.remove("hide");
-  S=[0,0];E=[];DATE=dateNow();$("score1")&&($("score1").value=0,$("score2").value=0);$("raw1").value=0;$("raw2").value=0;refreshBuyerOptions();setMode("sun");
-  $("date").textContent=DATE;update();save();deal();
-}
-function newNames(){
-  pendingNewNames=true;
-  [1,2,3,4].forEach(i=>$("p"+i).value=P[i-1]||"");
-  $("t1").value=T[0]||"";$("t2").value=T[1]||"";
-  $("finish").classList.add("hide");$("game").classList.add("hide");$("setup").classList.remove("hide");
-  window.scrollTo({top:0,behavior:"smooth"});
-}
-$("p1").addEventListener("keydown",e=>{if(e.key==="Enter")$("p2").focus()});
-$("p2").addEventListener("keydown",e=>{if(e.key==="Enter")$("p3").focus()});
-$("p3").addEventListener("keydown",e=>{if(e.key==="Enter")$("p4").focus()});
-$("p4").addEventListener("keydown",e=>{if(e.key==="Enter")$("t1").focus()});
-["raw1","raw2"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter")recordRound()}));
-
-["raw1","raw2","project1","project2","buyer","multiplier","kaboot","kabootTeam","lastTrick"].forEach(id=>$(id).addEventListener("input",previewRound));
-function openVoice(){$("voiceModal").classList.remove("hide");refreshVoices()}
-function closeVoice(){$("voiceModal").classList.add("hide")}
-function refreshVoices(){
-  if(!window.speechSynthesis)return;
-  voices=speechSynthesis.getVoices()||[];
-  const select=$("voiceSelect"),old=localStorage.getItem("baloot_voice")||"auto";
-  select.innerHTML='<option value="auto">تلقائي — صوت أنثى عربي إن توفر</option>';
-  voices.filter(v=>/^ar/i.test(v.lang)||/arab/i.test(v.name)).forEach(v=>{
-    const o=document.createElement("option");o.value=v.voiceURI;o.textContent=v.name+" — "+v.lang;select.appendChild(o);
-  });
-  select.value=[...select.options].some(o=>o.value===old)?old:"auto";
-}
-function pickVoice(){
-  if(!voices.length)return null;
-  const wanted=localStorage.getItem("baloot_voice")||"auto";
-  if(wanted!=="auto")return voices.find(v=>v.voiceURI===wanted)||null;
-  const ar=voices.filter(v=>/^ar/i.test(v.lang)||/arab/i.test(v.name));
-  const femaleWords=/female|woman|girl|laila|layla|leila|noura|nora|sara|sarah|hoda|mona|sanaa|sana|fatima|fatma|أنثى|ليلى|نورا|سارة|هدى|منى|سناء|فاطمة/i;
-  return ar.find(v=>femaleWords.test(v.name))||ar[0]||voices.find(v=>/^en/i.test(v.lang))||voices[0];
-}
-function say(t){
-  if(!window.speechSynthesis)return;
-  const u=new SpeechSynthesisUtterance(t);u.lang="ar-SA";u.rate=Number($("rate")?.value||localStorage.getItem("baloot_rate")||.88);u.pitch=1.08;
-  const v=pickVoice();if(v)u.voice=v;
-  speechSynthesis.cancel();speechSynthesis.speak(u);
-}
-function testVoice(){say("أهلاً، هذه تجربة صوت البلوت. التوزيع عند عبد الرحمن، والنتيجة أربعة عشر لواحد عشر.");}
-$("voiceSelect").addEventListener("change",e=>localStorage.setItem("baloot_voice",e.target.value));
-$("rate").addEventListener("input",e=>localStorage.setItem("baloot_rate",e.target.value));
-if("speechSynthesis" in window){speechSynthesis.onvoiceschanged=refreshVoices;setTimeout(refreshVoices,500)}
-
-function draw(idx){
-  const c=$("canvas"),x=c.getContext("2d"),w=1080,h=1350;
-  x.fillStyle="#07110d";x.fillRect(0,0,w,h);
-  const g=x.createRadialGradient(540,160,40,540,650,900);g.addColorStop(0,"#173b2a");g.addColorStop(1,"#07110d");x.fillStyle=g;x.fillRect(0,0,w,h);
-  x.textAlign="center";x.fillStyle="#d9b968";x.font="bold 58px Arial";x.fillText("♠  بلوت",540,150);
-  x.fillStyle="#f7f5ef";x.font="bold 48px Arial";x.fillText("نتيجة الصكة",540,300);
-  x.font="bold 96px Arial";x.fillText(idx<0?"تعادل":T[idx],540,480);
-  x.fillStyle="#e0bd6a";x.font="bold 190px Arial";x.fillText(S[0]+" - "+S[1],540,720);
-  x.fillStyle="#d8e1db";x.font="bold 42px Arial";x.fillText(T[0]+"  •  "+wins()[0]+" فوز",280,880);
-  x.fillText(T[1]+"  •  "+wins()[1]+" فوز",800,880);
-  x.fillStyle="#9eb1a7";x.font="34px Arial";x.fillText(DATE,540,1010);
-  x.font="30px Arial";x.fillText("سجل الصكات: "+history.length,540,1100);
-  x.fillStyle="#657a6e";x.font="27px Arial";x.fillText("حاسبة بلوت • مجانية",540,1220);
-}
-async function share(){
-  $("canvas").toBlob(async b=>{
-    const f=new File([b],"baloot-result.png",{type:"image/png"});
-    try{
-      if(navigator.share&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({title:"نتيجة البلوت",files:[f]});return}
-    }catch(e){}
-    const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="baloot-result.png";a.click();
-  },"image/png");
-}
+const $=id=>document.getElementById(id);let P=[],T=[],S=[0,0],dealer=0,roundNo=0,mode="sun",buyer=0,raise="1",trump="♠",roundTricks=[],roundLog=[],history=[],matchHistory=[],voices=[],voiceRate=.9,finished=false;
+const projectOptions=[["0","بدون مشروع"],["4","سرا — 4"],["10","خمسين — 10"],["20","مائة — 20"],["40","أربعمائة — 40"],["2","بلوت — 2"]];
+function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function save(){localStorage.setItem("balootState",JSON.stringify({P,T,S,dealer,roundNo,mode,buyer,raise,trump,roundTricks,roundLog,history,matchHistory,voiceRate}))}
+function load(){try{const x=JSON.parse(localStorage.getItem("balootState")||"null");if(x){P=x.P||[];T=x.T||[];S=x.S||[0,0];dealer=x.dealer||0;roundNo=x.roundNo||0;mode=x.mode||"sun";buyer=x.buyer||0;raise=x.raise||"1";trump=x.trump||"♠";roundTricks=x.roundTricks||[];roundLog=x.roundLog||[];history=x.history||[];matchHistory=x.matchHistory||[];voiceRate=x.voiceRate||.9}}catch(e){}fillProjects();refreshVoices();setTimeout(refreshVoices,900);update();if(P.length===4&&T.length===2&&roundNo>0)showGame()}
+function fillProjects(){for(const id of ["pr0","pr1"])$(id).innerHTML=projectOptions.map(x=>'<option value="'+x[0]+'">'+x[1]+'</option>').join("")}
+function start(){P=[0,1,2,3].map(i=>$(("p"+i)).value.trim()||("لاعب "+(i+1)));T=[$("t0").value.trim()||P[0]+" و "+P[1],$("t1").value.trim()||P[2]+" و "+P[3]];S=[0,0];dealer=Math.floor(Math.random()*4);roundNo=0;history=[];matchHistory=[];finished=false;save();showGame();newRound()}
+function showGame(){$("setup").classList.add("hide");$("finish").classList.add("hide");$("game").classList.remove("hide");fillBuyer();update()}
+function drawDealer(){dealer=Math.floor(Math.random()*4);$("dealInfo").innerHTML="الموزع: <b>"+esc(P[dealer])+"</b> — يبدأ اللعب من اللاعب على يمينه.";$("bidBox").classList.remove("hide");$("playBox").classList.add("hide");$("stepNo")&&($("stepNo").textContent="2");say("الموزع هو "+P[dealer])}
+function newRound(){roundNo++;roundTricks=[];roundLog=[];$("bidBox").classList.add("hide");$("playBox").classList.add("hide");$("q0").value=0;$("q1").value=0;$("pr0").value="0";$("pr1").value="0";$("kaboot").checked=false;$("dealInfo").textContent="اسحب الموزع لبدء المزايدة.";fillBuyer();renderTricks();save();update()}
+function fillBuyer(){$("buyer").innerHTML=P.map((n,i)=>'<option value="'+i+'">'+esc(n)+' — '+esc(T[i%2])+'</option>').join("");$("trickWinner").innerHTML=T.map((n,i)=>'<option value="'+i+'">'+esc(n)+'</option>').join("")}
+function chooseMode(m){mode=m;$("sun").classList.toggle("active",m==="sun");$("hokm").classList.toggle("active",m==="hokm");$("trump").disabled=m==="sun";if(m==="sun")$("raise").value="1";updateContractText()}
+function confirmContract(){buyer=Number($("buyer").value);raise=$("raise").value;trump=$("trump").value;if(mode==="sun")trump="";$("bidBox").classList.add("hide");$("playBox").classList.remove("hide");roundTricks=[];renderTricks();updateContractText();say((mode==="sun"?"صن":"حكم")+"، المشتري "+P[buyer])}
+function updateContractText(){const r=raise==="1"?"عادي":raise==="2"?"دبل":raise==="3"?"ثري":raise==="4"?"فور":"قهوة";$("contractText").innerHTML="العقد: <b>"+(mode==="sun"?"☀️ صن":"♣️ حكم "+trump)+"</b> • المشتري: <b>"+esc(P[buyer]||"")+"</b> • "+r}
+function convertRaw(raw){raw=Math.max(0,Number(raw)||0);return mode==="sun"?Math.round(raw/10)*2:Math.round(raw/10)}
+function addTrick(){if(roundTricks.length>=8){alert("اكتملت الأكلات الثمان.");return}const team=Number($("trickWinner").value),raw=Math.max(0,Number($("trickPoints").value)||0),last=$("lastTrick").value==="1";roundTricks.push({team,points:raw+(last?10:0),raw,last});$("trickPoints").value=0;$("lastTrick").value="0";renderTricks();if(roundTricks.length===8){const rawT=[0,0];roundTricks.forEach(x=>rawT[x.team]+=x.points);$("q0").value=convertRaw(rawT[0]);$("q1").value=convertRaw(rawT[1]);say("اكتملت الأكلات الثمان")}}
+function renderTricks(){$("trickList").innerHTML=roundTricks.length?roundTricks.map((x,i)=>'<div class="roundrow"><span>أكلة '+(i+1)+' • '+esc(T[x.team])+(x.last?" • آخر أكلة":"")+'</span><b>'+x.points+'</b></div>').join(""):"<div class='small'>لم تسجل أكلات بعد.</div>"}
+function projectVal(v){return Number(v)||0}
+function calculate(){let a=Number($("q0").value)||0,b=Number($("q1").value)||0;let p0=projectVal($("pr0").value),p1=projectVal($("pr1").value);let mult=raise==="coffee"?1:Number(raise)||1;if($("kaboot").checked){const kt=Number($("kabootTeam").value),k=mode==="sun"?44:25;return kt===0?[k*mult,0]:[0,k*mult]}if(raise==="coffee"){const kt=buyer%2,k=mode==="sun"?44:25;return kt===0?[k+p0,0]:[0,k+p1]}if(raise==="3"||raise==="4"){mult=1}if(raise!=="1")p0*=mult,p1*=mult;return[Math.round(a*mult+p0),Math.round(b*mult+p1)]}
+function recordRound(){if(finished)return;const add=calculate();if(add[0]===0&&add[1]===0){alert("أدخل نتيجة الجولة أولاً");return}history.push({before:[...S],add:[...add],mode,buyer,raise,trump,tricks:[...roundTricks],date:new Date().toLocaleTimeString("ar-SA",{hour:"2-digit",minute:"2-digit")});S=[S[0]+add[0],S[1]+add[1]];roundLog.unshift({n:roundNo,add:[...add],total:[...S],mode,buyer,date:new Date().toLocaleTimeString("ar-SA",{hour:"2-digit",minute:"2-digit")});save();update();say("الجولة "+roundNo+"، "+T[0]+" "+add[0]+" و "+T[1]+" "+add[1]);if(S[0]>=152||S[1]>=152)setTimeout(endMatch,300)}
+function undo(){if(!history.length)return;const h=history.pop();S=[...h.before];finished=false;save();update();renderRoundHistory();say("تم التراجع عن آخر جولة")}
+function endMatch(){if(finished)return;finished=true;const idx=S[0]>S[1]?0:S[1]>S[0]?1:-1;matchHistory.unshift({teams:[...T],players:[...P],scores:[...S],winner:idx,date:new Date().toLocaleDateString("ar-SA")});save();$("game").classList.add("hide");$("finish").classList.remove("hide");$("winner").textContent=idx<0?"تعادل — صكة فاصلة":T[idx]+" فاز بالصكة";$("finishDate").textContent=new Date().toLocaleString("ar-SA");$("fT0").textContent=T[0];$("fT1").textContent=T[1];$("fS0").textContent=S[0];$("fS1").textContent=S[1];const w=wins();$("fW0").textContent=w[0]+" فوز";$("fW1").textContent=w[1]+" فوز";renderMatches();drawResult(idx);say(idx<0?"تعادل في الصكة":"انتهت الصكة. "+T[idx]+" فاز")}
+function wins(){const w=[0,0];matchHistory.forEach(m=>{if(m.winner===0)w[0]++;if(m.winner===1)w[1]++});return w}
+function sameNames(){S=[0,0];roundNo=0;history=[];roundLog=[];finished=false;showGame();newRound();save()}
+function newNames(){P=[];T=[];S=[0,0];roundNo=0;history=[];roundLog=[];finished=false;localStorage.removeItem("balootState");showSetup()}
+function update(){if(T.length<2)return;for(let i=0;i<2;i++){$("gT"+i).textContent=T[i];$("s"+i).textContent=S[i];$("b"+i).style.width=Math.min(100,S[i]/152*100)+"%"}const w=wins();$("gW0").textContent=w[0]+" فوز";$("gW1").textContent=w[1]+" فوز";renderRoundHistory()}
+function renderRoundHistory(){$("roundHistory").innerHTML=roundLog.length?roundLog.map(x=>'<div class="roundrow"><span>جولة '+x.n+' • '+(x.mode==="sun"?"صن":"حكم")+'</span><b>+'+x.add[0]+' / +'+x.add[1]+' → '+x.total[0]+' / '+x.total[1]+'</b></div>').join(""):"<div class='small'>لا توجد جولات مسجلة.</div>"}
+function renderMatches(){$("matchHistory").innerHTML=matchHistory.length?matchHistory.slice(0,20).map(m=>'<div class="roundrow"><span>'+esc(m.teams[0])+' vs '+esc(m.teams[1])+'<br><span class="tag">'+esc(m.date)+'</span></span><b>'+m.scores[0]+' - '+m.scores[1]+'</b></div>').join(""):"<div class='small'>لا توجد صكات سابقة.</div>"}
+function speakResult(){say($("winner").textContent+". النتيجة "+S[0]+" مقابل "+S[1])}
+function say(text){if(!("speechSynthesis" in window))return;const u=new SpeechSynthesisUtterance(text);u.lang="ar-SA";u.rate=voiceRate;const v=voices[Number(localStorage.getItem("balootVoice")||-1)];if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u)}
+function refreshVoices(){if(!("speechSynthesis" in window))return;voices=speechSynthesis.getVoices()||[];const s=$("voiceSelect");if(!s)return;s.innerHTML="";voices.forEach((v,i)=>{const o=document.createElement("option");o.value=i;o.textContent=v.name+" — "+v.lang;s.appendChild(o)});const saved=Number(localStorage.getItem("balootVoice")||-1);if(saved>=0&&saved<voices.length)s.value=saved;else{const ar=voices.findIndex(v=>/^ar/i.test(v.lang));if(ar>=0)s.value=ar}}
+function openSettings(){$("settings").classList.remove("hide");refreshVoices();$("voiceRate").value=voiceRate}
+function closeSettings(){$("settings").classList.add("hide")}
+function testVoice(){voiceRate=Number($("voiceRate").value);localStorage.setItem("balootVoice",$("voiceSelect").value);localStorage.setItem("balootVoiceRate",voiceRate);say("هلا، هذا اختبار صوت حاسبة البلوت")}
+function drawResult(idx){const c=$("resultCanvas"),x=c.getContext("2d");x.fillStyle="#07110d";x.fillRect(0,0,1080,1350);x.textAlign="center";x.fillStyle="#d8b35d";x.font="bold 70px Arial";x.fillText("♠ بلوت",540,160);x.fillStyle="#f7f5ee";x.font="bold 50px Arial";x.fillText("نتيجة الصكة",540,280);x.fillStyle="#f2d98f";x.font="bold 90px Arial";x.fillText(idx<0?"تعادل":T[idx]+" فاز",540,470);x.font="bold 150px Arial";x.fillText(S[0]+" - "+S[1],540,700);x.fillStyle="#aebdb6";x.font="bold 34px Arial";x.fillText(T[0]+" • "+wins()[0]+" فوز",280,870);x.fillText(T[1]+" • "+wins()[1]+" فوز",800,870);x.font="30px Arial";x.fillText(new Date().toLocaleDateString("ar-SA"),540,1010)}
+async function shareResult(){const c=$("resultCanvas");c.toBlob(async b=>{const f=new File([b],"baloot-result.png",{type:"image/png"});try{if(navigator.share&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({title:"نتيجة البلوت",files:[f]});return}}catch(e){}const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="baloot-result.png";a.click()},"image/png")}
+function openSettings(){}
+function closeSettings(){}
+function testVoice(){}
+if("speechSynthesis"in window)speechSynthesis.onvoiceschanged=refreshVoices;
 load();
-</script>
-</body>
-</html>
+</script></body></html>
