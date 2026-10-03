@@ -199,9 +199,13 @@ footer{text-align:center;color:#52645b;font-size:10px;margin-top:20px}
       <div class="helper">القيم تختلف بين الصن والحكم؛ التطبيق يحسبها تلقائيًا. الأربعمائة للصن، والبلوت للحكم.</div>
     </div>
     <div style="margin-top:12px">
-      <label style="display:flex;gap:8px;align-items:center;background:#08120e;border:1px solid #1f382c;border-radius:13px;padding:11px;font-size:12px">
-        <input id="kaboot" type="checkbox" style="width:auto"> كبوت — الفريق أخذ كل الأكلات
-      </label>
+      <label style="display:flex;gap:8px;align-items:center;background:#08120e;border:1px solid #1f382c;border-radius:13px;padding:11px;font-size:12px;margin-bottom:8px"><input id="lastTrick" type="checkbox" checked style="width:auto"> آخر أكلة +10 أبناط</label>
+      <div class="grid2">
+        <label style="display:flex;gap:8px;align-items:center;background:#08120e;border:1px solid #1f382c;border-radius:13px;padding:11px;font-size:12px">
+          <input id="kaboot" type="checkbox" style="width:auto"> كبوت
+        </label>
+        <select id="kabootTeam"><option value="0">الكبوت للفريق 1</option><option value="1">الكبوت للفريق 2</option></select>
+      </div>
     </div>
     <button class="btn primary" onclick="recordRound()">✓ تسجيل الجولة</button>
     <div class="row">
@@ -276,7 +280,7 @@ function startRound(){
   $("team1").textContent=T[0];$("team2").textContent=T[1];$("date").textContent=DATE;
   $("topWinsName1").textContent=T[0];$("topWinsName2").textContent=T[1];
   $("game").classList.remove("hide");$("setup").classList.add("hide");$("finish").classList.add("hide");
-  $("score1")&&($("score1").value=0,$("score2").value=0);$("raw1").value=0;$("raw2").value=0;refreshBuyerOptions();setMode("sun");update();deal();
+  $("score1")&&($("score1").value=0,$("score2").value=0);$("raw1").value=0;$("raw2").value=0;$("lastTrick").checked=true;$("kaboot").checked=false;refreshBuyerOptions();setMode("sun");update();deal();
 }
 function save(){
   localStorage.setItem("baloot_state",JSON.stringify({P,T,S,E,D,DATE,history}));
@@ -317,6 +321,7 @@ function setMode(mode){
   $("hokmBtn").classList.toggle("active",mode==="hokm");
   $("project1").value="0";$("project2").value="0";
   $("multiplier").value="1";
+  const m=$("multiplier"); [...m.options].forEach(o=>o.disabled=(mode==="sun"&&(o.value==="3"||o.value==="4"||o.value==="coffee"))); m.value="1";
   refreshBuyerOptions();previewRound();
 }
 function refreshBuyerOptions(){
@@ -334,23 +339,22 @@ function projectValue(v){
 function convertPoints(raw,mode){
   raw=Math.max(0,Number(raw)||0);
   if(mode==="sun"){
-    const rounded=Math.round(raw/10)*10;
-    return (Math.abs(raw-rounded)<=0?rounded:raw)*2/10;
+    if(raw%10===5)return raw/5;
+    return Math.round(raw/10)*2;
   }
   return Math.round(raw/10);
 }
 function previewRound(){
-  const a=Number($("raw1").value)||0,b=Number($("raw2").value)||0;
+  const a=(Number($("raw1").value)||0)+($("lastTrick").checked?10:0),b=(Number($("raw2").value)||0);
   let p1=convertPoints(a,gameMode),p2=convertPoints(b,gameMode);
   const buyer=Number($("buyer").value)||0;
   const mult=$("multiplier").value;
   const kaboot=$("kaboot").checked;
   if(kaboot){
     p1=0;p2=0;
-    const k=gameMode==="sun"?44:25;
-    if(mult!=="1"&&mult!=="coffee")p1=buyer===0?k*Number(mult):0,p2=buyer===1?k*Number(mult):0;
-    else if(mult==="coffee") { if(b>0)p1=buyer===0?k:0,p2=buyer===1?k:0; }
-    else {p1=buyer===0?k:0;p2=buyer===1?k:0;}
+    const k=gameMode==="sun"?44:25; const kt=Number($("kabootTeam").value)||0;
+    if(mult!=="1"&&mult!=="coffee")p1=kt===0?k*Number(mult):0,p2=kt===1?k*Number(mult):0;
+    else {p1=kt===0?k:0;p2=kt===1?k:0;}
   }
   const proj1=projectValue($("project1").value),proj2=projectValue($("project2").value);
   const factor=mult==="coffee"?1:Number(mult)||1;
@@ -443,7 +447,7 @@ $("p3").addEventListener("keydown",e=>{if(e.key==="Enter")$("p4").focus()});
 $("p4").addEventListener("keydown",e=>{if(e.key==="Enter")$("t1").focus()});
 ["raw1","raw2"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter")recordRound()}));
 
-["raw1","raw2","project1","project2","buyer","multiplier","kaboot"].forEach(id=>$(id).addEventListener("input",previewRound));
+["raw1","raw2","project1","project2","buyer","multiplier","kaboot","kabootTeam","lastTrick"].forEach(id=>$(id).addEventListener("input",previewRound));
 function openVoice(){$("voiceModal").classList.remove("hide");refreshVoices()}
 function closeVoice(){$("voiceModal").classList.add("hide")}
 function refreshVoices(){
