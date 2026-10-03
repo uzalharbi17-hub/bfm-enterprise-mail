@@ -1,3 +1,0 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { CampaignDetail } from "@/components/screens";
-export const Route = createFileRoute("/campaigns/$campaignId")({ head:()=>({meta:[{title:"Campaign Details — BFM Email Management System"},{name:"description",content:"Review campaign delivery progress and sending activity."},{property:"og:title",content:"Campaign Details — BFM Email Management System"},{property:"og:description",content:"Review campaign delivery progress and sending activity."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}), component:CampaignDetail });
