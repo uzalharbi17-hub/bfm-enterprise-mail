@@ -1,0 +1,4 @@
+{% extends "base.html" %}{% block content %}
+<div class="top"><div><div class="title">{{heading}}</div><div class="sub">{{sub}}</div></div><a class="btn" href="/requests/new">+ طلب جديد</a></div>
+<div class="card"><table class="table"><tr><th>السيريال</th><th>رقم الطلب</th><th>المنشأة</th><th>المرجع</th><th>المدينة</th><th>الحالة</th><th>آخر متابعة</th><th>التاريخ</th></tr>
+{% for r in rows %}<tr><td><a href="/requests/{{r.id}}">{{r.serial}}</a></td><td>{{r.request_no}}</td><td>{{r.company_name or '-'}}</td><td>{{r.reference}}</td><td>{{r.city}}</td><td>{{r.status}}</td><td>{{r.last_followup or r.created_at}}</td><td>{{r.created_at}}</td></tr>{% else %}<tr><td colspan="8" style="text-align:center;padding:30px">لا توجد طلبات</td></tr>{% endfor %}</table></div>{% endblock %}
