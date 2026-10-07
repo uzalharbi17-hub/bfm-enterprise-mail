@@ -307,9 +307,9 @@ def update_permissions(uid):
     if not has_permission("users_admin"): return "غير مصرح",403
     keys=["view_requests","create_request","manage_companies","reports","completed","in_progress","ten_days","users_admin","email_templates","audit","email_integration","email_settings"]
     vals=[1 if request.form.get(k)=="on" else 0 for k in keys]
-    c=db(); c.execute("""INSERT INTO user_permissions(user_id,view_requests,create_request,manage_companies,reports,completed,in_progress,ten_days,users_admin,email_templates,audit,email_integration)
+    c=db(); c.execute("""INSERT INTO user_permissions(user_id,view_requests,create_request,manage_companies,reports,completed,in_progress,ten_days,users_admin,email_templates,audit,email_integration,email_settings)
       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET
-      view_requests=excluded.view_requests,create_request=excluded.create_request,manage_companies=excluded.manage_companies,reports=excluded.reports,completed=excluded.completed,in_progress=excluded.in_progress,ten_days=excluded.ten_days,users_admin=excluded.users_admin,email_templates=excluded.email_templates,audit=excluded.audit,email_integration=excluded.email_integration""",(uid,*vals)); c.commit(); c.close()
+      view_requests=excluded.view_requests,create_request=excluded.create_request,manage_companies=excluded.manage_companies,reports=excluded.reports,completed=excluded.completed,in_progress=excluded.in_progress,ten_days=excluded.ten_days,users_admin=excluded.users_admin,email_templates=excluded.email_templates,audit=excluded.audit,email_integration=excluded.email_integration,email_settings=excluded.email_settings""",(uid,*vals)); c.commit(); c.close()
     audit("تعديل صلاحيات","user",uid,", ".join(k for k,v in zip(keys,vals) if v)); flash("تم حفظ الصلاحيات","success"); return redirect(url_for("users_page"))
 
 @APP.route("/companies",methods=["GET","POST"])
