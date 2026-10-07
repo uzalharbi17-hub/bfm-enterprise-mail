@@ -1,5 +1,11 @@
 <!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{title}} - نظام متابعة الطلبات</title><link rel="stylesheet" href="/static/style.css"></head><body>
 <div class="layout"><aside class="side"><div class="brand"><img src="/static/logo.svg" class="company-logo" alt="شعار الشركة"><div>نظام متابعة الطلبات</div></div><div class="nav">
-<a href="/">🏠 الرئيسية</a><a href="/requests">📋 جميع الطلبات</a><a href="/requests/new">➕ طلب جديد</a><a href="/reports">📊 تصدير التقارير</a><a href="/audit">📝 سجل التعديلات</a>
-{% if session.get('uid') %}<a href="/companies">🏢 السجلات التجارية</a><a href="/users">👥 المستخدمون</a><a href="/templates">📧 قوالب الإيميلات</a>{% endif %}
+<a href="/">🏠 الرئيسية</a><a href="/requests">📋 جميع الطلبات</a><a href="/requests/in-progress">⏳ الطلبات قيد التنفيذ</a><a href="/requests/completed">✅ الطلبات المنتهية</a><a href="/requests/new">➕ طلب جديد</a>
+{% if session.get('uid') %}
+  {% set current_user = user() %}
+  {% if current_user and current_user.role in ['hr','manager','super_admin'] %}<a href="/reports">📊 التقارير</a>{% endif %}
+  {% if current_user and current_user.role in ['manager','super_admin'] %}<a href="/requests/10-days">⚠️ طلبات 10 أيام</a>{% endif %}
+  <a href="/audit">📝 سجل التعديلات</a>
+  {% if current_user and current_user.role == 'super_admin' %}<a href="/companies">🏢 السجلات التجارية</a><a href="/users">👥 المستخدمون</a><a href="/templates">📧 قوالب الإيميلات</a>{% endif %}
+{% endif %}
 <a href="/logout">🚪 تسجيل الخروج</a></div></aside><main class="main">{% with messages=get_flashed_messages(with_categories=true) %}{% for cat,msg in messages %}<div class="alert">{{msg}}</div>{% endfor %}{% endwith %}{% block content %}{% endblock %}</main></div></body></html>
