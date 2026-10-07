@@ -1,6 +1,7 @@
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 import sqlite3, os, secrets, csv, io
+from email_service import send_email, is_configured
 from datetime import datetime, timedelta
 
 APP = Flask(__name__)
@@ -73,9 +74,21 @@ def render_email(code, data):
 
 def notify_managers(code, data):
     subject,body=render_email(code,data)
-    c=db(); managers=c.execute("SELECT email FROM users WHERE active=1 AND role IN ('manager','super_admin') AND email<>''").fetchall()
-    audit("إرسال إشعار بريد (وضع تجريبي)", "email", None, f"إلى: {', '.join([x['email'] for x in managers])}\nالموضوع: {subject}\n{body}")
+    c=db()
+    managers=c.execute("SELECT email FROM users WHERE active=1 AND role IN ('manager','super_admin') AND email<>''").fetchall()
+    recipients=[x["email"] for x in managers]
     c.close()
+    ok, detail=send_email(recipients, subject, body)
+    audit("إرسال إشعار بريد", "email", None, f"إلى: {', '.join(recipients)}\\nالنتيجة: {detail}\\nالموضوع: {subject}")
+    return ok, detail
+
+def notify_user(email, code, data):
+    if not email:
+        return False, "لا يوجد بريد للمستخدم"
+    subject,body=render_email(code,data)
+    ok, detail=send_email([email], subject, body)
+    audit("إرسال بريد للمستخدم", "email", None, f"إلى: {email}\\nالنتيجة: {detail}\\nالموضوع: {subject}")
+    return ok, detail
 
 @APP.route("/")
 def home():
@@ -164,16 +177,21 @@ def close_request(rid):
 def approve(rid):
     if user()["role"] not in ("manager","super_admin"): return "غير مصرح",403
     t=now(); c=db(); c.execute("UPDATE requests SET status='منتهي',closed_at=?,closed_by=? WHERE id=?",(t,session["uid"],rid)); c.commit()
-    r=c.execute("SELECT * FROM requests WHERE id=?",(rid,)).fetchone(); c.close()
+    r=c.execute("SELECT r.*,u.email employee_email FROM requests r LEFT JOIN users u ON u.id=r.created_by WHERE r.id=?",(rid,)).fetchone(); c.close()
     audit("اعتماد إنهاء","request",rid,"تم اعتماد الإنهاء")
-    notify_managers("closed",{"request_no":r["request_no"],"manager":user()["name"],"date":t})
+    notify_user(r["employee_email"],"closed",{"request_no":r["request_no"],"manager":user()["name"],"date":t})
     return redirect(url_for("request_detail",rid=rid))
 
 @APP.route("/requests/<int:rid>/reject",methods=["POST"])
 def reject(rid):
     if user()["role"] not in ("manager","super_admin"): return "غير مصرح",403
-    note=request.form["note"].strip(); c=db(); c.execute("UPDATE requests SET status='قيد التنفيذ',close_requested_at=NULL,close_note=? WHERE id=?",(note,rid)); c.commit(); c.close()
-    audit("رفض إنهاء","request",rid,note); return redirect(url_for("request_detail",rid=rid))
+    note=request.form["note"].strip()
+    c=db()
+    c.execute("UPDATE requests SET status='قيد التنفيذ',close_requested_at=NULL,close_note=? WHERE id=?",(note,rid)); c.commit()
+    r=c.execute("SELECT r.*,u.email employee_email FROM requests r LEFT JOIN users u ON u.id=r.created_by WHERE r.id=?",(rid,)).fetchone(); c.close()
+    audit("رفض إنهاء","request",rid,note)
+    notify_user(r["employee_email"],"close_request",{"request_no":r["request_no"],"user":user()["name"],"date":now(),"note":"تم رفض طلب الإنهاء: "+note})
+    return redirect(url_for("request_detail",rid=rid))
 
 @APP.route("/users",methods=["GET","POST"])
 def users_page():
