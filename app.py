@@ -52,7 +52,8 @@ def init_db():
     templates=[
       ("followup","تمت متابعة الطلب {{request_no}}","تمت متابعة الطلب رقم {{request_no}} بواسطة {{user}} بتاريخ {{date}}.\n\nتفاصيل المتابعة:\n{{note}}"),
       ("close_request","طلب اعتماد إنهاء الطلب {{request_no}}","الموظف {{user}} طلب اعتماد إنهاء الطلب رقم {{request_no}} بتاريخ {{date}}.\n\nالملاحظات:\n{{note}}"),
-      ("closed","تم اعتماد إنهاء الطلب {{request_no}}","تم اعتماد إنهاء الطلب رقم {{request_no}} بواسطة {{manager}} بتاريخ {{date}}.")
+      ("closed","تم اعتماد إنهاء الطلب {{request_no}}","تم اعتماد إنهاء الطلب رقم {{request_no}} بواسطة {{manager}} بتاريخ {{date}}."),
+      ("rejected","تم رفض إنهاء الطلب {{request_no}}","تم رفض طلب إنهاء الطلب رقم {{request_no}} بواسطة {{manager}} بتاريخ {{date}}.\\n\\nسبب الرفض:\\n{{note}}")
     ]
     for t in templates:
         c.execute("INSERT OR IGNORE INTO email_templates(code,subject,body) VALUES(?,?,?)",t)
@@ -190,7 +191,7 @@ def reject(rid):
     c.execute("UPDATE requests SET status='قيد التنفيذ',close_requested_at=NULL,close_note=? WHERE id=?",(note,rid)); c.commit()
     r=c.execute("SELECT r.*,u.email employee_email FROM requests r LEFT JOIN users u ON u.id=r.created_by WHERE r.id=?",(rid,)).fetchone(); c.close()
     audit("رفض إنهاء","request",rid,note)
-    notify_user(r["employee_email"],"close_request",{"request_no":r["request_no"],"user":user()["name"],"date":now(),"note":"تم رفض طلب الإنهاء: "+note})
+    notify_user(r["employee_email"],"rejected",{"request_no":r["request_no"],"manager":user()["name"],"date":now(),"note":note})
     return redirect(url_for("request_detail",rid=rid))
 
 @APP.route("/users",methods=["GET","POST"])
