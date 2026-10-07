@@ -19,9 +19,9 @@ def _token():
 def send_email(recipients,subject,body):
     recipients=[x.strip() for x in recipients if x and x.strip()]
     if not recipients: return False,"لا يوجد مستلمون"
-    token,error=_token()
-    if error: return False,error
     try:
+        token,error=_token()
+        if error: return False,error
         payload={"message":{"subject":subject,"body":{"contentType":"HTML","content":body.replace("\n","<br>")},"toRecipients":[{"emailAddress":{"address":x}} for x in recipients]},"saveToSentItems":True}
         url=GRAPH_SEND_URL.format(sender=quote(os.environ["MS_SENDER_EMAIL"],safe=""))
         r=requests.post(url,headers={"Authorization":f"Bearer {token}","Content-Type":"application/json"},json=payload,timeout=30)
