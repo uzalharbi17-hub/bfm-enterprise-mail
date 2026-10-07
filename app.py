@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 import sqlite3, os, secrets, csv, io, threading, time, re
 import openpyxl
@@ -274,7 +273,7 @@ def in_progress_requests():
     c=db()
     rows=c.execute("""SELECT r.*,u.name creator,co.cr,co.unified,co.name company_name
                       FROM requests r LEFT JOIN users u ON u.id=r.created_by
-                      LEFT JOIN companies co ON co.id=r.company_id
+                      LEFT JOIN companies co ON co.id=u.created_by
                       WHERE r.status IN ('قيد التنفيذ','بانتظار اعتماد الإنهاء')
                       ORDER BY r.id DESC""").fetchall()
     c.close()
@@ -315,7 +314,7 @@ def update_permissions(uid):
     vals=[1 if request.form.get(k)=="on" else 0 for k in keys]
     c=db(); c.execute("""INSERT INTO user_permissions(user_id,view_requests,create_request,manage_companies,reports,completed,in_progress,ten_days,users_admin,email_templates,audit,email_integration,email_settings)
       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET
-      view_requests=excluded.view_requests,create_request=excluded.create_request,manage_companies=excluded.manage_companies,reports=excluded.reports,completed=excluded.completed,in_progress=excluded.in_progress,ten_days=excluded.ten_days,users_admin=excluded.users_admin,email_templates=excluded.email_templates,audit=excluded.audit,email_integration=excluded.email_integration,email_settings=excluded.email_settings""",(uid,*vals)); c.commit(); c.close()
+      view_requests=excluded.view_requests,create_request=excluded.create_request,manage_companies=excluded.manage_companies,reports=excluded.reports,completed=excluded.completed,in_progress=excluded.in_progress,ten_days=excluded.ten_days,users_admin=excluded.users_admin,email_templates=excluded.email_templates,email_integration=excluded.email_integration,email_settings=excluded.email_settings""",(uid,*vals)); c.commit(); c.close()
     audit("تعديل صلاحيات","user",uid,", ".join(k for k,v in zip(keys,vals) if v)); flash("تم حفظ الصلاحيات","success"); return redirect(url_for("users_page"))
 
 @APP.route("/companies",methods=["GET","POST"])
@@ -370,7 +369,30 @@ def email_settings():
         audit("تحديث إعدادات ربط الإيميل","email_settings",None,"تم حفظ إعدادات Microsoft 365")
         flash("تم حفظ إعدادات ربط الإيميل. قد تحتاج لإعادة تشغيل النظام لتطبيقها بالكامل.","success")
     return render_template("email_settings.html",title="إعدادات ربط الإيميل",configured=is_configured(),values={k:os.environ.get(k,"") for k in ["MS_TENANT_ID","MS_CLIENT_ID","MS_CLIENT_SECRET","MS_SENDER_EMAIL","EMAIL_SYNC_SECONDS"]})
-    
+
+@APP.route("/email-settings/test", methods=["POST"])
+def email_settings_test():
+    if not has_permission("email_settings"):
+        return "غير مصرح",403
+    recipient=request.form.get("test_email","").strip()
+    if not recipient:
+        flash("اكتب البريد الإلكتروني الذي تريد إرسال الاختبار إليه.","error")
+        return redirect(url_for("email_settings"))
+    if not is_configured():
+        flash("إعدادات Microsoft 365 غير مكتملة. أكمل Tenant ID وClient ID وClient Secret وبريد الإرسال أولاً.","error")
+        return redirect(url_for("email_settings"))
+    try:
+        ok, detail=send_email(
+            [recipient],
+            "اختبار ربط البريد الإلكتروني - BFM",
+            "هذه رسالة اختبار من نظام BFM للتأكد من أن الربط مع Microsoft 365 / Microsoft Graph يعمل بشكل صحيح."
+        )
+    except Exception as exc:
+        ok, detail=False, f"فشل الاختبار: {exc}"
+    audit("اختبار ربط الإيميل","email_settings",None,f"إلى: {recipient}\nالنتيجة: {detail}")
+    flash(("✅ "+detail) if ok else ("❌ فشل إرسال الاختبار: "+detail), "success" if ok else "error")
+    return redirect(url_for("email_settings"))
+
 @APP.route("/audit")
 def audit_page():
     if not has_permission("audit"): return "غير مصرح",403
