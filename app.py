@@ -36,7 +36,6 @@ def init_db():
       in_progress INTEGER DEFAULT 1, ten_days INTEGER DEFAULT 0, users_admin INTEGER DEFAULT 0,
       email_templates INTEGER DEFAULT 0, audit INTEGER DEFAULT 0, email_integration INTEGER DEFAULT 0,
       email_settings INTEGER DEFAULT 0,
-      email_settings INTEGER DEFAULT 0,
       FOREIGN KEY(user_id) REFERENCES users(id)
     );
     CREATE TABLE IF NOT EXISTS companies(
@@ -80,8 +79,8 @@ def init_db():
         c.execute("INSERT OR IGNORE INTO email_templates(code,subject,body) VALUES(?,?,?)",t)
     for u in c.execute("SELECT id,role FROM users").fetchall():
         if not c.execute("SELECT 1 FROM user_permissions WHERE user_id=?",(u["id"],)).fetchone():
-            c.execute("""INSERT INTO user_permissions(user_id,view_requests,create_request,manage_companies,reports,completed,in_progress,ten_days,users_admin,email_templates,audit,email_integration)
-                         VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",(u["id"],1,1,1 if u["role"]=="super_admin" else 0,1 if u["role"] in ("hr","manager","super_admin") else 0,1,1,1 if u["role"] in ("manager","super_admin") else 0,1 if u["role"]=="super_admin" else 0,1 if u["role"]=="super_admin" else 0,1,1 if u["role"]=="super_admin" else 0))
+            c.execute("""INSERT INTO user_permissions(user_id,view_requests,create_request,manage_companies,reports,completed,in_progress,ten_days,users_admin,email_templates,audit,email_integration,email_settings)
+                         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",(u["id"],1,1,1 if u["role"]=="super_admin" else 0,1 if u["role"] in ("hr","manager","super_admin") else 0,1,1,1 if u["role"] in ("manager","super_admin") else 0,1 if u["role"]=="super_admin" else 0,1 if u["role"]=="super_admin" else 0,1,1 if u["role"]=="super_admin" else 0,1 if u["role"]=="super_admin" else 0))
     c.commit(); c.close()
 
 def now(): return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
