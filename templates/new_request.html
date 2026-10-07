@@ -34,25 +34,25 @@
     </div>
 
     <div class="field" style="min-width:280px">
-      <label>السجل التجاري</label>
-      <input
-        id="companySearch"
-        list="companyOptions"
-        autocomplete="off"
-        placeholder="اكتب رقم السجل أو اسم المنشأة..."
-        required>
+      <label>رقم السجل التجاري</label>
+      <input id="companySearch" name="company_cr" list="companyOptions" autocomplete="off" inputmode="numeric" placeholder="اكتب رقم السجل التجاري..." required>
       <input type="hidden" name="company_id" id="companyId">
       <datalist id="companyOptions">
         {% for x in companies %}
-          <option
-            value="{{ x.cr }} — {{ x.name }} — {{ x.unified }}"
-            data-id="{{ x.id }}">
-          </option>
+          <option value="{{ x.cr }}" data-id="{{ x.id }}" data-name="{{ x.name }}" data-unified="{{ x.unified }}"></option>
         {% endfor %}
       </datalist>
-      <small style="display:block;margin-top:6px;opacity:.7">
-        البحث يعرض: رقم السجل التجاري — اسم المنشأة — الرقم الموحد
-      </small>
+      <div class="row" style="margin-top:12px">
+        <div class="field">
+          <label>اسم المنشأة</label>
+          <input id="companyName" readonly placeholder="يظهر تلقائيًا">
+        </div>
+        <div class="field">
+          <label>رقم المنشأة</label>
+          <input id="companyUnified" readonly placeholder="يظهر تلقائيًا">
+        </div>
+      </div>
+      <small style="display:block;margin-top:6px;opacity:.7">اكتب جزءًا من رقم السجل مثل 700 وستظهر السجلات المطابقة، ثم اختر السجل.</small>
     </div>
   </div>
 
@@ -63,6 +63,8 @@
 (function () {
   const input = document.getElementById('companySearch');
   const hidden = document.getElementById('companyId');
+  const nameInput = document.getElementById('companyName');
+  const unifiedInput = document.getElementById('companyUnified');
   const options = Array.from(document.querySelectorAll('#companyOptions option'));
   const form = document.getElementById('newRequestForm');
 
@@ -70,6 +72,8 @@
     const value = input.value.trim();
     const match = options.find(o => o.value === value);
     hidden.value = match ? match.dataset.id : '';
+    nameInput.value = match ? (match.dataset.name || '') : '';
+    unifiedInput.value = match ? (match.dataset.unified || '') : '';
   }
 
   input.addEventListener('input', syncCompany);
@@ -79,7 +83,7 @@
     syncCompany();
     if (!hidden.value) {
       e.preventDefault();
-      alert('اختر سجلًا تجاريًا من القائمة حتى يتم ربط الطلب بالمنشأة.');
+      alert('اختر رقم السجل التجاري من القائمة حتى يظهر اسم المنشأة ورقم المنشأة تلقائيًا.');
       input.focus();
     }
   });
