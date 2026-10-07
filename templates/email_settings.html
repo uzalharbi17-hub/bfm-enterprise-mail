@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block content %}<div class="top"><div><div class="title">إعدادات ربط الإيميل</div><div class="sub">Microsoft 365 / Microsoft Graph</div></div><div class="card">الحالة: <b>{{ 'متصل ومهيأ' if configured else 'غير مهيأ' }}</b></div></div>
+<form class="form" method="post">
+<div class="row"><div class="field"><label>Tenant ID</label><input name="MS_TENANT_ID" value="{{values.MS_TENANT_ID}}" required></div><div class="field"><label>Client ID</label><input name="MS_CLIENT_ID" value="{{values.MS_CLIENT_ID}}" required></div></div>
+<div class="row"><div class="field"><label>Client Secret</label><input type="password" name="MS_CLIENT_SECRET" value="{{values.MS_CLIENT_SECRET}}" required></div><div class="field"><label>بريد الإرسال</label><input type="email" name="MS_SENDER_EMAIL" value="{{values.MS_SENDER_EMAIL}}" required></div></div>
+<div class="field"><label>فترة مزامنة الوارد بالثواني</label><input type="number" min="30" name="EMAIL_SYNC_SECONDS" value="{{values.EMAIL_SYNC_SECONDS or '60'}}"></div>
+<button class="btn">💾 حفظ إعدادات الربط</button>
+</form>
+<div class="card" style="margin-top:18px"><h3>المطلوب من Microsoft 365</h3><p>Application Permissions: Mail.Send و Mail.Read، ثم Grant admin consent.</p><p>بعد الحفظ أعد تشغيل النظام لتبدأ مزامنة الوارد تلقائيًا.</p></div>{% endblock %}
