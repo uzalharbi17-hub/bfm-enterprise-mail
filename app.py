@@ -1,6 +1,13 @@
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 import sqlite3, os, secrets, csv, io, threading, time, re
+import openpyxl
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
 from email_service import send_email, is_configured, fetch_inbox
 from datetime import datetime, timedelta
 
@@ -28,6 +35,8 @@ def init_db():
       manage_companies INTEGER DEFAULT 0, reports INTEGER DEFAULT 0, completed INTEGER DEFAULT 1,
       in_progress INTEGER DEFAULT 1, ten_days INTEGER DEFAULT 0, users_admin INTEGER DEFAULT 0,
       email_templates INTEGER DEFAULT 0, audit INTEGER DEFAULT 0, email_integration INTEGER DEFAULT 0,
+      email_settings INTEGER DEFAULT 0,
+      email_settings INTEGER DEFAULT 0,
       FOREIGN KEY(user_id) REFERENCES users(id)
     );
     CREATE TABLE IF NOT EXISTS companies(
@@ -282,19 +291,19 @@ def users_page():
     if request.method=="POST":
         c.execute("INSERT INTO users(name,username,password,email,role) VALUES(?,?,?,?,?)",(request.form["name"],request.form["username"],request.form["password"],request.form["email"],request.form["role"]))
         uid=c.execute("SELECT last_insert_rowid()").fetchone()[0]
-        c.execute("INSERT INTO user_permissions(user_id,view_requests,create_request,completed,in_progress,audit) VALUES(?,?,?,?,?,?)",(uid,1,1,1,1,1))
+        c.execute("INSERT INTO user_permissions(user_id,view_requests,create_request,completed,in_progress,audit,email_settings) VALUES(?,?,?,?,?,?,?)",(uid,1,1,1,1,1,0))
         c.commit(); audit("إضافة مستخدم","user",uid,request.form["username"])
-    rows=c.execute("""SELECT u.*,p.view_requests,p.create_request,p.manage_companies,p.reports,p.completed,p.in_progress,p.ten_days,p.users_admin,p.email_templates,p.audit,p.email_integration
+    rows=c.execute("""SELECT u.*,p.view_requests,p.create_request,p.manage_companies,p.reports,p.completed,p.in_progress,p.ten_days,p.users_admin,p.email_templates,p.audit,p.email_integration,p.email_settings
                       FROM users u LEFT JOIN user_permissions p ON p.user_id=u.id ORDER BY u.id DESC""").fetchall(); c.close()
     return render_template("users.html",title="المستخدمون",rows=rows)
 
 @APP.route("/users/<int:uid>/permissions",methods=["POST"])
 def update_permissions(uid):
     if not has_permission("users_admin"): return "غير مصرح",403
-    keys=["view_requests","create_request","manage_companies","reports","completed","in_progress","ten_days","users_admin","email_templates","audit","email_integration"]
+    keys=["view_requests","create_request","manage_companies","reports","completed","in_progress","ten_days","users_admin","email_templates","audit","email_integration","email_settings"]
     vals=[1 if request.form.get(k)=="on" else 0 for k in keys]
     c=db(); c.execute("""INSERT INTO user_permissions(user_id,view_requests,create_request,manage_companies,reports,completed,in_progress,ten_days,users_admin,email_templates,audit,email_integration)
-      VALUES(?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET
       view_requests=excluded.view_requests,create_request=excluded.create_request,manage_companies=excluded.manage_companies,reports=excluded.reports,completed=excluded.completed,in_progress=excluded.in_progress,ten_days=excluded.ten_days,users_admin=excluded.users_admin,email_templates=excluded.email_templates,audit=excluded.audit,email_integration=excluded.email_integration""",(uid,*vals)); c.commit(); c.close()
     audit("تعديل صلاحيات","user",uid,", ".join(k for k,v in zip(keys,vals) if v)); flash("تم حفظ الصلاحيات","success"); return redirect(url_for("users_page"))
 
@@ -307,6 +316,28 @@ def companies_page():
     rows=c.execute("SELECT * FROM companies ORDER BY id DESC").fetchall(); c.close()
     return render_template("companies.html",title="السجلات التجارية",rows=rows)
 
+@APP.route("/companies/template")
+def companies_template():
+    if not has_permission("manage_companies"): return "غير مصرح",403
+    wb=openpyxl.Workbook(); ws=wb.active; ws.title="السجلات"
+    ws.append(["رقم السجل التجاري","الرقم الموحد","اسم المنشأة"])
+    ws.append(["1010XXXXXX","700XXXXXXX","اسم المنشأة"])
+    out=io.BytesIO(); wb.save(out); out.seek(0)
+    return send_file(out,as_attachment=True,download_name="نموذج_رفع_السجلات.xlsx",mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+@APP.route("/email-settings", methods=["GET","POST"])
+def email_settings():
+    if not has_permission("email_settings"): return "غير مصرح",403
+    if request.method=="POST":
+        env_path=os.path.join(os.path.dirname(__file__),".env")
+        vals={k:request.form.get(k,"").strip() for k in ["MS_TENANT_ID","MS_CLIENT_ID","MS_CLIENT_SECRET","MS_SENDER_EMAIL","EMAIL_SYNC_SECONDS"]}
+        lines=["# Microsoft 365 / Graph settings"]+[f"{k}={v}" for k,v in vals.items()]
+        with open(env_path,"w",encoding="utf-8") as f: f.write("\n".join(lines)+"\n")
+        os.environ.update(vals)
+        audit("تحديث إعدادات ربط الإيميل","email_settings",None,"تم حفظ إعدادات Microsoft 365")
+        flash("تم حفظ إعدادات ربط الإيميل. قد تحتاج لإعادة تشغيل النظام لتطبيقها بالكامل.","success")
+    return render_template("email_settings.html",title="إعدادات ربط الإيميل",configured=is_configured(),values={k:os.environ.get(k,"") for k in ["MS_TENANT_ID","MS_CLIENT_ID","MS_CLIENT_SECRET","MS_SENDER_EMAIL","EMAIL_SYNC_SECONDS"]})
+    
 @APP.route("/audit")
 def audit_page():
     if not has_permission("audit"): return "غير مصرح",403
@@ -323,17 +354,50 @@ def templates_page():
     rows=c.execute("SELECT * FROM email_templates").fetchall(); c.close()
     return render_template("templates.html",title="قوالب الإيميلات",rows=rows)
 
-@APP.route("/reports")
+@APP.route("/reports", methods=["GET"])
 def reports():
-    if not has_permission("reports"): return "غير مصرح",403
-    if not role_is("hr","manager","super_admin"): return "غير مصرح",403
-    c=db(); rows=c.execute("""SELECT r.serial,r.request_no,r.request_type,r.reference,r.city,r.created_at,r.status,
-                                    r.last_followup,r.closed_at,co.cr,co.unified,co.name company_name
-                             FROM requests r LEFT JOIN companies co ON co.id=r.company_id ORDER BY r.id DESC""").fetchall(); c.close()
-    out=io.StringIO(); w=csv.writer(out); w.writerow(["Serial","رقم الطلب","نوع الطلب","المرجع","المدينة","تاريخ الطلب","الحالة","آخر متابعة","تاريخ الإنهاء","السجل التجاري","الرقم الموحد","اسم المنشأة"])
-    for r in rows: w.writerow([r[k] for k in ["serial","request_no","request_type","reference","city","created_at","status","last_followup","closed_at","cr","unified","company_name"]])
-    data=("\ufeff"+out.getvalue()).encode("utf-8-sig")
-    return send_file(io.BytesIO(data),as_attachment=True,download_name="تقرير_الطلبات.csv",mimetype="text/csv")
+    if not has_permission("reports") or not role_is("hr","manager","super_admin"): return "غير مصرح",403
+    return render_template("reports.html", title="التقارير")
+
+@APP.route("/reports/export")
+def reports_export():
+    if not has_permission("reports") or not role_is("hr","manager","super_admin"): return "غير مصرح",403
+    fmt=request.args.get("format","xlsx").lower()
+    period=request.args.get("period","all")
+    start=request.args.get("start","")
+    end=request.args.get("end","")
+    c=db()
+    sql="""SELECT r.serial,r.request_no,r.request_type,r.reference,r.city,r.created_at,r.status,
+                  r.last_followup,r.closed_at,co.cr,co.unified,co.name company_name
+           FROM requests r LEFT JOIN companies co ON co.id=r.company_id WHERE 1=1"""
+    args=[]
+    if period=="custom":
+        if start: sql+=" AND date(r.created_at)>=date(?)"; args.append(start)
+        if end: sql+=" AND date(r.created_at)<=date(?)"; args.append(end)
+    sql+=" ORDER BY r.id DESC"
+    rows=c.execute(sql,args).fetchall(); c.close()
+    headers=["الرقم التسلسلي","رقم الطلب","نوع الطلب","المرجع","المدينة","تاريخ الطلب","الحالة","آخر متابعة","تاريخ الإنهاء","السجل التجاري","الرقم الموحد","اسم المنشأة"]
+    data=[[r["serial"],r["request_no"],r["request_type"],r["reference"],r["city"],r["created_at"],r["status"],r["last_followup"] or "",r["closed_at"] or "",r["cr"] or "",r["unified"] or "",r["company_name"] or ""] for r in rows]
+    if fmt=="xlsx":
+        wb=openpyxl.Workbook(); ws=wb.active; ws.title="تقرير الطلبات"
+        ws.append(headers)
+        for row in data: ws.append(row)
+        ws.freeze_panes="A2"; ws.auto_filter.ref=ws.dimensions
+        for cell in ws[1]: cell.font=openpyxl.styles.Font(bold=True)
+        for col in ws.columns:
+            letter=col[0].column_letter
+            ws.column_dimensions[letter].width=min(max(max(len(str(x.value or "")) for x in col)+2,12),35)
+        out=io.BytesIO(); wb.save(out); out.seek(0)
+        return send_file(out,as_attachment=True,download_name="تقرير_الطلبات.xlsx",mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    if fmt=="pdf":
+        out=io.BytesIO()
+        doc=SimpleDocTemplate(out,pagesize=landscape(A4),rightMargin=18,leftMargin=18,topMargin=18,bottomMargin=18)
+        styles=getSampleStyleSheet(); title=Paragraph("تقرير الطلبات - BFM",styles["Title"])
+        table=Table([headers]+data,repeatRows=1)
+        table.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,0),colors.HexColor("#1f2937")),("TEXTCOLOR",(0,0),(-1,0),colors.white),("GRID",(0,0),(-1,-1),0.4,colors.grey),("FONTSIZE",(0,0),(-1,-1),6),("VALIGN",(0,0),(-1,-1),"MIDDLE")]))
+        doc.build([title,Spacer(1,8),table]); out.seek(0)
+        return send_file(out,as_attachment=True,download_name="تقرير_الطلبات.pdf",mimetype="application/pdf")
+    return "صيغة غير مدعومة",400
 
 def sync_inbox():
     messages,error=fetch_inbox(50)
