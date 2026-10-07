@@ -61,6 +61,11 @@ def init_db():
 
 def now(): return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 def user(): return db().execute("SELECT * FROM users WHERE id=?",(session.get("uid"),)).fetchone()
+
+@APP.context_processor
+def inject_current_user():
+    return {"current_user": user()}
+
 def audit(action, entity="", entity_id=None, details=""):
     c=db(); c.execute("INSERT INTO audit_logs(user_id,action,entity,entity_id,details,created_at) VALUES(?,?,?,?,?,?)",
       (session.get("uid"),action,entity,entity_id,details,now())); c.commit(); c.close()
