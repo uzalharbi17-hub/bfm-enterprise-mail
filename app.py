@@ -70,7 +70,7 @@ def init_db():
       received_at TEXT NOT NULL, FOREIGN KEY(request_id) REFERENCES requests(id)
     );
     """)
-    cols=[r["name"] for r in c.execute("PRAGMA table_info(user_permissions)").fetchall()]
+    # Remove the old placeholder email from existing databases as well.\n    c.execute("UPDATE users SET email='' WHERE LOWER(TRIM(COALESCE(email,''))) = 'admin@example.com'")\n    cols=[r["name"] for r in c.execute("PRAGMA table_info(user_permissions)").fetchall()]
     if "email_settings" not in cols: c.execute("ALTER TABLE user_permissions ADD COLUMN email_settings INTEGER DEFAULT 0")
     if not c.execute("SELECT 1 FROM users LIMIT 1").fetchone():
         c.execute("INSERT INTO users(name,username,password,email,role) VALUES(?,?,?,?,?)",
