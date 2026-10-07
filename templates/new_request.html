@@ -1,1 +1,88 @@
-{% extends "base.html" %}{% block content %}<div class="top"><div><div class="title">تسجيل طلب جديد</div><div class="sub">السيريال يولده النظام تلقائيًا</div></div></div><form class="form" method="post"><div class="row"><div class="field"><label>رقم الطلب</label><input name="request_no" required></div><div class="field"><label>نوع الطلب</label><input name="request_type" placeholder="اكتب نوع الطلب" required></div><div class="field"><label>مرجع الطلب</label><select name="reference" required>{% for x in references %}<option>{{x}}</option>{% endfor %}</select></div><div class="field"><label>المدينة</label><select name="city" required>{% for x in cities %}<option>{{x}}</option>{% endfor %}</select></div><div class="field"><label>السجل التجاري</label><select name="company_id" required><option value="">اختر السجل</option>{% for x in companies %}<option value="{{x.id}}">{{x.cr}} — {{x.name}}</option>{% endfor %}</select></div></div><button class="btn">تسجيل الطلب</button></form>{% endblock %}
+{% extends "base.html" %}
+{% block content %}
+<div class="top">
+  <div>
+    <div class="title">تسجيل طلب جديد</div>
+    <div class="sub">السيريال يولده النظام تلقائيًا</div>
+  </div>
+</div>
+
+<form class="form" method="post" id="newRequestForm">
+  <div class="row">
+    <div class="field">
+      <label>رقم الطلب</label>
+      <input name="request_no" required>
+    </div>
+
+    <div class="field">
+      <label>نوع الطلب</label>
+      <input name="request_type" placeholder="اكتب نوع الطلب" required>
+    </div>
+
+    <div class="field">
+      <label>مرجع الطلب</label>
+      <select name="reference" required>
+        {% for x in references %}<option value="{{ x }}">{{ x }}</option>{% endfor %}
+      </select>
+    </div>
+
+    <div class="field">
+      <label>المدينة</label>
+      <select name="city" required>
+        {% for x in cities %}<option value="{{ x }}">{{ x }}</option>{% endfor %}
+      </select>
+    </div>
+
+    <div class="field" style="min-width:280px">
+      <label>السجل التجاري</label>
+      <input
+        id="companySearch"
+        list="companyOptions"
+        autocomplete="off"
+        placeholder="اكتب رقم السجل أو اسم المنشأة..."
+        required>
+      <input type="hidden" name="company_id" id="companyId">
+      <datalist id="companyOptions">
+        {% for x in companies %}
+          <option
+            value="{{ x.cr }} — {{ x.name }} — {{ x.unified }}"
+            data-id="{{ x.id }}">
+          </option>
+        {% endfor %}
+      </datalist>
+      <small style="display:block;margin-top:6px;opacity:.7">
+        البحث يعرض: رقم السجل التجاري — اسم المنشأة — الرقم الموحد
+      </small>
+    </div>
+  </div>
+
+  <button class="btn" type="submit">تسجيل الطلب</button>
+</form>
+
+<script>
+(function () {
+  const input = document.getElementById('companySearch');
+  const hidden = document.getElementById('companyId');
+  const options = Array.from(document.querySelectorAll('#companyOptions option'));
+  const form = document.getElementById('newRequestForm');
+
+  function syncCompany() {
+    const value = input.value.trim();
+    const match = options.find(o => o.value === value);
+    hidden.value = match ? match.dataset.id : '';
+  }
+
+  input.addEventListener('input', syncCompany);
+  input.addEventListener('change', syncCompany);
+
+  form.addEventListener('submit', function (e) {
+    syncCompany();
+    if (!hidden.value) {
+      e.preventDefault();
+      alert('اختر سجلًا تجاريًا من القائمة حتى يتم ربط الطلب بالمنشأة.');
+      input.focus();
+    }
+  });
+})();
+</script>
+{% endblock %}
