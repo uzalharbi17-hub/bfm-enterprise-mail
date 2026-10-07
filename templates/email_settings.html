@@ -5,4 +5,14 @@
 <div class="field"><label>فترة مزامنة الوارد بالثواني</label><input type="number" min="30" name="EMAIL_SYNC_SECONDS" value="{{values.EMAIL_SYNC_SECONDS or '60'}}"></div>
 <button class="btn">💾 حفظ إعدادات الربط</button>
 </form>
+
+<div class="card" style="margin-top:18px">
+<h3>📧 اختبار إرسال البريد</h3>
+<p>بعد إدخال إعدادات Microsoft 365 وحفظها، اكتب بريدًا حقيقيًا تريد استلام رسالة الاختبار عليه.</p>
+<form class="form" method="post" action="{{ url_for('email_settings_test') }}" style="margin-top:12px">
+<div class="field"><label>البريد المستلم للاختبار</label><input type="email" name="test_email" placeholder="example@company.com" required></div>
+<button class="btn" type="submit">📨 إرسال بريد تجريبي</button>
+</form>
+</div>
+
 <div class="card" style="margin-top:18px"><h3>المطلوب من Microsoft 365</h3><p>Application Permissions: Mail.Send و Mail.Read، ثم Grant admin consent.</p><p>بعد الحفظ أعد تشغيل النظام لتبدأ مزامنة الوارد تلقائيًا.</p></div>{% endblock %}
