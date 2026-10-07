@@ -1,7 +1,7 @@
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
-import sqlite3, os, secrets, csv, io
-from email_service import send_email, is_configured
+import sqlite3, os, secrets, csv, io, threading, time, re
+from email_service import send_email, is_configured, fetch_inbox
 from datetime import datetime, timedelta
 
 APP = Flask(__name__)
@@ -45,6 +45,11 @@ def init_db():
     CREATE TABLE IF NOT EXISTS email_templates(
       id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT UNIQUE NOT NULL, subject TEXT NOT NULL, body TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS email_messages(
+      id INTEGER PRIMARY KEY AUTOINCREMENT, request_id INTEGER, direction TEXT NOT NULL,
+      sender TEXT, recipients TEXT, subject TEXT, body TEXT, message_id TEXT UNIQUE,
+      received_at TEXT NOT NULL, FOREIGN KEY(request_id) REFERENCES requests(id)
+    );
     """)
     if not c.execute("SELECT 1 FROM users LIMIT 1").fetchone():
         c.execute("INSERT INTO users(name,username,password,email,role) VALUES(?,?,?,?,?)",
@@ -78,8 +83,13 @@ def render_email(code, data):
         s=s.replace("{{"+k+"}}",str(v)); b=b.replace("{{"+k+"}}",str(v))
     return s,b
 
-def notify_managers(code, data):
+def _email_subject(subject,data):
+    serial=data.get('serial')
+    return f'[REQ:{serial}] {subject}' if serial else subject
+
+def notify_managers(code,data):
     subject,body=render_email(code,data)
+    subject=_email_subject(subject,data)
     c=db()
     managers=c.execute("SELECT email FROM users WHERE active=1 AND role IN ('manager','super_admin') AND email<>''").fetchall()
     recipients=[x["email"] for x in managers]
@@ -92,6 +102,7 @@ def notify_user(email, code, data):
     if not email:
         return False, "لا يوجد بريد للمستخدم"
     subject,body=render_email(code,data)
+    subject=_email_subject(subject,data)
     ok, detail=send_email([email], subject, body)
     audit("إرسال بريد للمستخدم", "email", None, f"إلى: {email}\\nالنتيجة: {detail}\\nالموضوع: {subject}")
     return ok, detail
@@ -160,9 +171,10 @@ def request_detail(rid):
     c=db(); r=c.execute("""SELECT r.*,u.name creator,co.cr,co.unified,co.name company_name FROM requests r
                            LEFT JOIN users u ON u.id=r.created_by LEFT JOIN companies co ON co.id=r.company_id WHERE r.id=?""",(rid,)).fetchone()
     f=c.execute("SELECT f.*,u.name FROM followups f LEFT JOIN users u ON u.id=f.user_id WHERE f.request_id=? ORDER BY f.id DESC",(rid,)).fetchall()
+    emails=c.execute("SELECT * FROM email_messages WHERE request_id=? ORDER BY received_at DESC, id DESC",(rid,)).fetchall()
     c.close()
     if not r: return "غير موجود",404
-    return render_template("request_detail.html",title="تفاصيل الطلب",r=r,f=f)
+    return render_template("request_detail.html",title="تفاصيل الطلب",r=r,f=f,emails=emails)
 
 @APP.route("/requests/<int:rid>/followup",methods=["POST"])
 def followup(rid):
@@ -171,7 +183,7 @@ def followup(rid):
     c.execute("UPDATE requests SET last_followup=?,status='قيد التنفيذ' WHERE id=?",(t,rid)); c.commit()
     r=c.execute("SELECT * FROM requests WHERE id=?",(rid,)).fetchone(); c.close()
     audit("إضافة متابعة","request",rid,note)
-    notify_managers("followup",{"request_no":r["request_no"],"user":user()["name"],"date":t,"note":note})
+    notify_managers("followup",{"request_no":r["request_no"],"serial":r["serial"],"user":user()["name"],"date":t,"note":note})
     return redirect(url_for("request_detail",rid=rid))
 
 @APP.route("/requests/<int:rid>/close-request",methods=["POST"])
@@ -189,7 +201,7 @@ def approve(rid):
     t=now(); c=db(); c.execute("UPDATE requests SET status='منتهي',closed_at=?,closed_by=? WHERE id=?",(t,session["uid"],rid)); c.commit()
     r=c.execute("SELECT r.*,u.email employee_email FROM requests r LEFT JOIN users u ON u.id=r.created_by WHERE r.id=?",(rid,)).fetchone(); c.close()
     audit("اعتماد إنهاء","request",rid,"تم اعتماد الإنهاء")
-    notify_user(r["employee_email"],"closed",{"request_no":r["request_no"],"manager":user()["name"],"date":t})
+    notify_user(r["employee_email"],"closed",{"request_no":r["request_no"],"serial":r["serial"],"manager":user()["name"],"date":t})
     return redirect(url_for("request_detail",rid=rid))
 
 @APP.route("/requests/<int:rid>/reject",methods=["POST"])
@@ -200,7 +212,7 @@ def reject(rid):
     c.execute("UPDATE requests SET status='قيد التنفيذ',close_requested_at=NULL,close_note=? WHERE id=?",(note,rid)); c.commit()
     r=c.execute("SELECT r.*,u.email employee_email FROM requests r LEFT JOIN users u ON u.id=r.created_by WHERE r.id=?",(rid,)).fetchone(); c.close()
     audit("رفض إنهاء","request",rid,note)
-    notify_user(r["employee_email"],"rejected",{"request_no":r["request_no"],"manager":user()["name"],"date":now(),"note":note})
+    notify_user(r["employee_email"],"rejected",{"request_no":r["request_no"],"serial":r["serial"],"manager":user()["name"],"date":now(),"note":note})
     return redirect(url_for("request_detail",rid=rid))
 
 @APP.route("/requests/completed")
@@ -284,6 +296,37 @@ def reports():
     data=("\ufeff"+out.getvalue()).encode("utf-8-sig")
     return send_file(io.BytesIO(data),as_attachment=True,download_name="تقرير_الطلبات.csv",mimetype="text/csv")
 
+def sync_inbox():
+    messages,error=fetch_inbox(50)
+    if error: return False,error
+    c=db(); added=0
+    for m in messages:
+        mid=m.get("internetMessageId") or m.get("id")
+        if not mid or c.execute("SELECT 1 FROM email_messages WHERE message_id=?",(mid,)).fetchone(): continue
+        subject=m.get("subject") or ""
+        body=((m.get("body") or {}).get("content") or "")
+        match=re.search(r"REQ:([A-Z0-9_-]+)",subject+"\n"+body,re.I)
+        if not match: continue
+        req=c.execute("SELECT id FROM requests WHERE serial=?",(match.group(1),)).fetchone()
+        if not req: continue
+        sender=((m.get("from") or {}).get("emailAddress") or {}).get("address","")
+        recipients=", ".join(((x.get("emailAddress") or {}).get("address","")) for x in (m.get("toRecipients") or []))
+        c.execute("""INSERT OR IGNORE INTO email_messages
+          (request_id,direction,sender,recipients,subject,body,message_id,received_at)
+          VALUES(?,?,?,?,?,?,?,?)""",(req["id"],"inbound",sender,recipients,subject,body,mid,m.get("receivedDateTime") or now()))
+        added+=c.execute("SELECT changes()").fetchone()[0]
+    c.commit(); c.close()
+    return True,f"تمت مزامنة {added} رسالة"
+
+def _email_sync_loop():
+    while True:
+        try:
+            if is_configured(): sync_inbox()
+        except Exception: pass
+        time.sleep(max(int(os.environ.get("EMAIL_SYNC_SECONDS","60")),30))
+
 init_db()
+if is_configured():
+    threading.Thread(target=_email_sync_loop,daemon=True,name="email-sync").start()
 if __name__=="__main__":
     APP.run(host="0.0.0.0",port=5000,debug=False)
