@@ -2,7 +2,6 @@
 <div class="layout"><aside class="side"><div class="brand"><img src="/static/logo.svg" class="company-logo" alt="شعار الشركة"><div>نظام متابعة الطلبات</div></div><div class="nav">
 <a href="/">🏠 الرئيسية</a><a href="/requests">📋 جميع الطلبات</a><a href="/requests/in-progress">⏳ الطلبات قيد التنفيذ</a><a href="/requests/completed">✅ الطلبات المنتهية</a><a href="/requests/new">➕ طلب جديد</a>
 {% if session.get('uid') %}
-  
   {% if current_user and current_user.role in ['hr','manager','super_admin'] %}<a href="/reports">📊 التقارير</a>{% endif %}
   {% if current_user and current_user.role in ['manager','super_admin'] %}<a href="/requests/10-days">⚠️ طلبات 10 أيام</a>{% endif %}
   <a href="/audit">📝 سجل التعديلات</a>
