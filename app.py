@@ -23,6 +23,13 @@ def init_db():
       id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, username TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL, email TEXT, role TEXT NOT NULL DEFAULT 'employee', active INTEGER DEFAULT 1
     );
+    CREATE TABLE IF NOT EXISTS user_permissions(
+      user_id INTEGER PRIMARY KEY, view_requests INTEGER DEFAULT 1, create_request INTEGER DEFAULT 1,
+      manage_companies INTEGER DEFAULT 0, reports INTEGER DEFAULT 0, completed INTEGER DEFAULT 1,
+      in_progress INTEGER DEFAULT 1, ten_days INTEGER DEFAULT 0, users_admin INTEGER DEFAULT 0,
+      email_templates INTEGER DEFAULT 0, audit INTEGER DEFAULT 0, email_integration INTEGER DEFAULT 0,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    );
     CREATE TABLE IF NOT EXISTS companies(
       id INTEGER PRIMARY KEY AUTOINCREMENT, cr TEXT UNIQUE NOT NULL, unified TEXT NOT NULL, name TEXT NOT NULL, active INTEGER DEFAULT 1
     );
@@ -62,6 +69,10 @@ def init_db():
     ]
     for t in templates:
         c.execute("INSERT OR IGNORE INTO email_templates(code,subject,body) VALUES(?,?,?)",t)
+    for u in c.execute("SELECT id,role FROM users").fetchall():
+        if not c.execute("SELECT 1 FROM user_permissions WHERE user_id=?",(u["id"],)).fetchone():
+            c.execute("""INSERT INTO user_permissions(user_id,view_requests,create_request,manage_companies,reports,completed,in_progress,ten_days,users_admin,email_templates,audit,email_integration)
+                         VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",(u["id"],1,1,1 if u["role"]=="super_admin" else 0,1 if u["role"] in ("hr","manager","super_admin") else 0,1,1,1 if u["role"] in ("manager","super_admin") else 0,1 if u["role"]=="super_admin" else 0,1 if u["role"]=="super_admin" else 0,1,1 if u["role"]=="super_admin" else 0))
     c.commit(); c.close()
 
 def now(): return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -69,7 +80,7 @@ def user(): return db().execute("SELECT * FROM users WHERE id=?",(session.get("u
 
 @APP.context_processor
 def inject_current_user():
-    return {"current_user": user()}
+    return {"current_user": user(), "has_permission": has_permission}
 
 def audit(action, entity="", entity_id=None, details=""):
     c=db(); c.execute("INSERT INTO audit_logs(user_id,action,entity,entity_id,details,created_at) VALUES(?,?,?,?,?,?)",
@@ -137,12 +148,20 @@ def login():
 @APP.route("/logout")
 def logout(): session.clear(); return redirect(url_for("login"))
 
+def has_permission(name):
+    u=user()
+    if not u: return False
+    if u["role"]=="super_admin": return True
+    c=db(); p=c.execute("SELECT * FROM user_permissions WHERE user_id=?",(u["id"],)).fetchone(); c.close()
+    return bool(p and p[name])
+
 def role_is(*roles):
     u=user()
     return bool(u and u["role"] in roles)
 
 @APP.route("/requests")
 def requests_page():
+    if not has_permission("view_requests"): return "غير مصرح",403
     q=request.args.get("q","").strip(); status=request.args.get("status",""); reference=request.args.get("reference",""); city=request.args.get("city","")
     c=db(); sql="""SELECT r.*,u.name creator,co.cr,co.unified,co.name company_name FROM requests r
                  LEFT JOIN users u ON u.id=r.created_by LEFT JOIN companies co ON co.id=r.company_id WHERE 1=1"""
@@ -157,6 +176,7 @@ def requests_page():
 
 @APP.route("/requests/new",methods=["GET","POST"])
 def new_request():
+    if not has_permission("create_request"): return "غير مصرح",403
     c=db(); companies=c.execute("SELECT * FROM companies WHERE active=1 ORDER BY name").fetchall()
     if request.method=="POST":
         serial="REQ-"+datetime.now().strftime("%Y%m%d")+"-"+secrets.token_hex(3).upper()
@@ -217,6 +237,7 @@ def reject(rid):
 
 @APP.route("/requests/completed")
 def completed_requests():
+    if not has_permission("completed"): return "غير مصرح",403
     if not session.get("uid"): return redirect(url_for("login"))
     c=db()
     rows=c.execute("""SELECT r.*,u.name creator,co.cr,co.unified,co.name company_name
@@ -228,6 +249,7 @@ def completed_requests():
 
 @APP.route("/requests/in-progress")
 def in_progress_requests():
+    if not has_permission("in_progress"): return "غير مصرح",403
     if not session.get("uid"): return redirect(url_for("login"))
     c=db()
     rows=c.execute("""SELECT r.*,u.name creator,co.cr,co.unified,co.name company_name
@@ -240,6 +262,7 @@ def in_progress_requests():
 
 @APP.route("/requests/10-days")
 def ten_days_requests():
+    if not has_permission("ten_days"): return "غير مصرح",403
     if not role_is("manager","super_admin"): return "غير مصرح",403
     cutoff=(datetime.now()-timedelta(days=10)).strftime("%Y-%m-%d %H:%M:%S")
     c=db()
@@ -254,17 +277,30 @@ def ten_days_requests():
 
 @APP.route("/users",methods=["GET","POST"])
 def users_page():
-    if user()["role"]!="super_admin": return "غير مصرح",403
+    if not has_permission("users_admin"): return "غير مصرح",403
     c=db()
     if request.method=="POST":
-        c.execute("INSERT INTO users(name,username,password,email,role) VALUES(?,?,?,?,?)",
-                  (request.form["name"],request.form["username"],request.form["password"],request.form["email"],request.form["role"])); c.commit(); audit("إضافة مستخدم","user",c.execute("SELECT last_insert_rowid()").fetchone()[0],request.form["username"])
-    rows=c.execute("SELECT * FROM users ORDER BY id DESC").fetchall(); c.close()
+        c.execute("INSERT INTO users(name,username,password,email,role) VALUES(?,?,?,?,?)",(request.form["name"],request.form["username"],request.form["password"],request.form["email"],request.form["role"]))
+        uid=c.execute("SELECT last_insert_rowid()").fetchone()[0]
+        c.execute("INSERT INTO user_permissions(user_id,view_requests,create_request,completed,in_progress,audit) VALUES(?,?,?,?,?,?)",(uid,1,1,1,1,1))
+        c.commit(); audit("إضافة مستخدم","user",uid,request.form["username"])
+    rows=c.execute("""SELECT u.*,p.view_requests,p.create_request,p.manage_companies,p.reports,p.completed,p.in_progress,p.ten_days,p.users_admin,p.email_templates,p.audit,p.email_integration
+                      FROM users u LEFT JOIN user_permissions p ON p.user_id=u.id ORDER BY u.id DESC""").fetchall(); c.close()
     return render_template("users.html",title="المستخدمون",rows=rows)
+
+@APP.route("/users/<int:uid>/permissions",methods=["POST"])
+def update_permissions(uid):
+    if not has_permission("users_admin"): return "غير مصرح",403
+    keys=["view_requests","create_request","manage_companies","reports","completed","in_progress","ten_days","users_admin","email_templates","audit","email_integration"]
+    vals=[1 if request.form.get(k)=="on" else 0 for k in keys]
+    c=db(); c.execute("""INSERT INTO user_permissions(user_id,view_requests,create_request,manage_companies,reports,completed,in_progress,ten_days,users_admin,email_templates,audit,email_integration)
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET
+      view_requests=excluded.view_requests,create_request=excluded.create_request,manage_companies=excluded.manage_companies,reports=excluded.reports,completed=excluded.completed,in_progress=excluded.in_progress,ten_days=excluded.ten_days,users_admin=excluded.users_admin,email_templates=excluded.email_templates,audit=excluded.audit,email_integration=excluded.email_integration""",(uid,*vals)); c.commit(); c.close()
+    audit("تعديل صلاحيات","user",uid,", ".join(k for k,v in zip(keys,vals) if v)); flash("تم حفظ الصلاحيات","success"); return redirect(url_for("users_page"))
 
 @APP.route("/companies",methods=["GET","POST"])
 def companies_page():
-    if user()["role"]!="super_admin": return "غير مصرح",403
+    if not has_permission("manage_companies"): return "غير مصرح",403
     c=db()
     if request.method=="POST":
         c.execute("INSERT OR IGNORE INTO companies(cr,unified,name) VALUES(?,?,?)",(request.form["cr"],request.form["unified"],request.form["name"])); c.commit(); audit("إضافة سجل تجاري","company",None,request.form["cr"])
@@ -273,11 +309,13 @@ def companies_page():
 
 @APP.route("/audit")
 def audit_page():
+    if not has_permission("audit"): return "غير مصرح",403
     c=db(); rows=c.execute("""SELECT a.*,u.name FROM audit_logs a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.id DESC LIMIT 300""").fetchall(); c.close()
     return render_template("audit.html",title="سجل التعديلات",rows=rows)
 
 @APP.route("/templates",methods=["GET","POST"])
 def templates_page():
+    if not has_permission("email_templates"): return "غير مصرح",403
     if user()["role"]!="super_admin": return "غير مصرح",403
     c=db()
     if request.method=="POST":
@@ -287,6 +325,7 @@ def templates_page():
 
 @APP.route("/reports")
 def reports():
+    if not has_permission("reports"): return "غير مصرح",403
     if not role_is("hr","manager","super_admin"): return "غير مصرح",403
     c=db(); rows=c.execute("""SELECT r.serial,r.request_no,r.request_type,r.reference,r.city,r.created_at,r.status,
                                     r.last_followup,r.closed_at,co.cr,co.unified,co.name company_name
