@@ -121,6 +121,10 @@ def login():
 @APP.route("/logout")
 def logout(): session.clear(); return redirect(url_for("login"))
 
+def role_is(*roles):
+    u=user()
+    return bool(u and u["role"] in roles)
+
 @APP.route("/requests")
 def requests_page():
     q=request.args.get("q","").strip(); status=request.args.get("status",""); reference=request.args.get("reference",""); city=request.args.get("city","")
@@ -194,6 +198,43 @@ def reject(rid):
     notify_user(r["employee_email"],"rejected",{"request_no":r["request_no"],"manager":user()["name"],"date":now(),"note":note})
     return redirect(url_for("request_detail",rid=rid))
 
+@APP.route("/requests/completed")
+def completed_requests():
+    if not session.get("uid"): return redirect(url_for("login"))
+    c=db()
+    rows=c.execute("""SELECT r.*,u.name creator,co.cr,co.unified,co.name company_name
+                      FROM requests r LEFT JOIN users u ON u.id=r.created_by
+                      LEFT JOIN companies co ON co.id=r.company_id
+                      WHERE r.status='منتهي' ORDER BY r.closed_at DESC, r.id DESC""").fetchall()
+    c.close()
+    return render_template("request_status.html",title="الطلبات المنتهية",heading="الطلبات المنتهية",sub="جميع الطلبات التي تم اعتماد إنهائها",rows=rows)
+
+@APP.route("/requests/in-progress")
+def in_progress_requests():
+    if not session.get("uid"): return redirect(url_for("login"))
+    c=db()
+    rows=c.execute("""SELECT r.*,u.name creator,co.cr,co.unified,co.name company_name
+                      FROM requests r LEFT JOIN users u ON u.id=r.created_by
+                      LEFT JOIN companies co ON co.id=r.company_id
+                      WHERE r.status IN ('قيد التنفيذ','بانتظار اعتماد الإنهاء')
+                      ORDER BY r.id DESC""").fetchall()
+    c.close()
+    return render_template("request_status.html",title="الطلبات قيد التنفيذ",heading="الطلبات قيد التنفيذ",sub="صفحة مستقلة للطلبات غير المنتهية",rows=rows)
+
+@APP.route("/requests/10-days")
+def ten_days_requests():
+    if not role_is("manager","super_admin"): return "غير مصرح",403
+    cutoff=(datetime.now()-timedelta(days=10)).strftime("%Y-%m-%d %H:%M:%S")
+    c=db()
+    rows=c.execute("""SELECT r.*,u.name creator,co.cr,co.unified,co.name company_name
+                      FROM requests r LEFT JOIN users u ON u.id=r.created_by
+                      LEFT JOIN companies co ON co.id=r.company_id
+                      WHERE r.status='قيد التنفيذ'
+                        AND COALESCE(r.last_followup,r.created_at) <= ?
+                      ORDER BY COALESCE(r.last_followup,r.created_at) ASC""",(cutoff,)).fetchall()
+    c.close()
+    return render_template("request_status.html",title="طلبات 10 أيام",heading="طلبات لم تتم متابعتها 10 أيام",sub="هذه الصفحة متاحة للمدراء وSuper Admin فقط",rows=rows)
+
 @APP.route("/users",methods=["GET","POST"])
 def users_page():
     if user()["role"]!="super_admin": return "غير مصرح",403
@@ -229,6 +270,7 @@ def templates_page():
 
 @APP.route("/reports")
 def reports():
+    if not role_is("hr","manager","super_admin"): return "غير مصرح",403
     c=db(); rows=c.execute("""SELECT r.serial,r.request_no,r.request_type,r.reference,r.city,r.created_at,r.status,
                                     r.last_followup,r.closed_at,co.cr,co.unified,co.name company_name
                              FROM requests r LEFT JOIN companies co ON co.id=r.company_id ORDER BY r.id DESC""").fetchall(); c.close()
