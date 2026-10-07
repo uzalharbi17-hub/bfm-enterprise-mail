@@ -5,6 +5,6 @@
   {% if current_user and current_user.role in ['hr','manager','super_admin'] %}<a href="/reports">📊 التقارير</a>{% endif %}
   {% if current_user and current_user.role in ['manager','super_admin'] %}<a href="/requests/10-days">⚠️ طلبات 10 أيام</a>{% endif %}
   <a href="/audit">📝 سجل التعديلات</a>
-  {% if current_user and current_user.role == 'super_admin' %}<a href="/companies">🏢 السجلات التجارية</a><a href="/users">👥 المستخدمون</a><a href="/templates">📧 قوالب الإيميلات</a>{% endif %}
+  {% if current_user and (current_user.role == 'super_admin' or has_permission('manage_companies')) %}<a href="/companies">🏢 السجلات التجارية</a>{% endif %}{% if current_user and (current_user.role == 'super_admin' or has_permission('users_admin')) %}<a href="/users">👥 المستخدمون</a>{% endif %}{% if current_user and (current_user.role == 'super_admin' or has_permission('email_templates')) %}<a href="/templates">📧 قوالب الإيميلات</a>{% endif %}{% if current_user and (current_user.role == 'super_admin' or has_permission('email_settings')) %}<a href="/email-settings">⚙️ إعدادات ربط الإيميل</a>{% endif %}
 {% endif %}
 <a href="/logout">🚪 تسجيل الخروج</a></div></aside><main class="main">{% with messages=get_flashed_messages(with_categories=true) %}{% for cat,msg in messages %}<div class="alert">{{msg}}</div>{% endfor %}{% endwith %}{% block content %}{% endblock %}</main></div></body></html>
