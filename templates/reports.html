@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block content %}<div class="top"><div><div class="title">التقارير</div><div class="sub">اختر الصيغة ونطاق التقرير ثم حمّل الملف</div></div></div>
+<form class="form" action="/reports/export" method="get">
+<h2>📊 إعداد التقرير</h2>
+<div class="row"><div class="field"><label>صيغة التقرير</label><select name="format"><option value="pdf">PDF</option><option value="xlsx">Excel</option></select></div>
+<div class="field"><label>نطاق التقرير</label><select name="period" id="period" onchange="document.getElementById('dates').style.display=this.value==='custom'?'grid':'none'"><option value="all">تقرير كامل</option><option value="custom">فترة محددة</option></select></div></div>
+<div id="dates" class="row" style="display:none"><div class="field"><label>من تاريخ</label><input type="date" name="start"></div><div class="field"><label>إلى تاريخ</label><input type="date" name="end"></div></div>
+<button class="btn" type="submit">📥 إنشاء وتحميل التقرير</button>
+</form>{% endblock %}
