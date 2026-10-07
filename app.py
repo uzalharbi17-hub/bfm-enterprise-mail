@@ -2,12 +2,16 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 import sqlite3, os, secrets, csv, io, threading, time, re
 import openpyxl
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
+import arabic_reshaper
+from bidi.algorithm import get_display
 from email_service import send_email, is_configured, fetch_inbox
 from datetime import datetime, timedelta
 
@@ -66,6 +70,8 @@ def init_db():
       received_at TEXT NOT NULL, FOREIGN KEY(request_id) REFERENCES requests(id)
     );
     """)
+    cols=[r["name"] for r in c.execute("PRAGMA table_info(user_permissions)").fetchall()]
+    if "email_settings" not in cols: c.execute("ALTER TABLE user_permissions ADD COLUMN email_settings INTEGER DEFAULT 0")
     if not c.execute("SELECT 1 FROM users LIMIT 1").fetchone():
         c.execute("INSERT INTO users(name,username,password,email,role) VALUES(?,?,?,?,?)",
                   ("مدير النظام","admin","admin123","admin@example.com","super_admin"))
@@ -311,7 +317,29 @@ def companies_page():
     if not has_permission("manage_companies"): return "غير مصرح",403
     c=db()
     if request.method=="POST":
-        c.execute("INSERT OR IGNORE INTO companies(cr,unified,name) VALUES(?,?,?)",(request.form["cr"],request.form["unified"],request.form["name"])); c.commit(); audit("إضافة سجل تجاري","company",None,request.form["cr"])
+        if request.form.get("action")=="upload":
+            f=request.files.get("file")
+            if f and f.filename:
+                try:
+                    imported=0
+                    if f.filename.lower().endswith((".xlsx",".xlsm")):
+                        wb=openpyxl.load_workbook(f,read_only=True,data_only=True); rows_data=list(wb.active.iter_rows(values_only=True))
+                        headers=[str(x).strip() if x is not None else "" for x in (rows_data[0] if rows_data else [])]
+                        records=[dict(zip(headers,row)) for row in rows_data[1:]]
+                    else:
+                        records=list(csv.DictReader(io.StringIO(f.read().decode("utf-8-sig"))))
+                    for vals in records:
+                        cr=vals.get("رقم السجل التجاري") or vals.get("cr") or vals.get("السجل")
+                        unified=vals.get("الرقم الموحد") or vals.get("unified")
+                        name=vals.get("اسم المنشأة") or vals.get("name")
+                        if cr and unified and name:
+                            cur=c.execute("INSERT OR IGNORE INTO companies(cr,unified,name) VALUES(?,?,?)",(str(cr).strip(),str(unified).strip(),str(name).strip())); imported+=cur.rowcount
+                    c.commit(); audit("رفع سجلات تجارية","company",None,f"تم استيراد {imported} سجل"); flash(f"تم استيراد {imported} سجل بنجاح","success")
+                except Exception as exc:
+                    c.rollback(); flash(f"تعذر قراءة الملف: {exc}","error")
+            else: flash("اختر ملف Excel أو CSV","error")
+        else:
+            c.execute("INSERT OR IGNORE INTO companies(cr,unified,name) VALUES(?,?,?)",(request.form["cr"],request.form["unified"],request.form["name"])); c.commit(); audit("إضافة سجل تجاري","company",None,request.form["cr"])
     rows=c.execute("SELECT * FROM companies ORDER BY id DESC").fetchall(); c.close()
     return render_template("companies.html",title="السجلات التجارية",rows=rows)
 
