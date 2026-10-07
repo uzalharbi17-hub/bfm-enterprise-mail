@@ -119,7 +119,10 @@ def notify_managers(code,data):
     managers=c.execute("SELECT email FROM users WHERE active=1 AND role IN ('manager','super_admin') AND email<>''").fetchall()
     recipients=[x["email"] for x in managers]
     c.close()
-    ok, detail=send_email(recipients, subject, body)
+    try:
+        ok, detail=send_email(recipients, subject, body)
+    except Exception as exc:
+        ok, detail=False, f"فشل إرسال الإشعار: {exc}"
     audit("إرسال إشعار بريد", "email", None, f"إلى: {', '.join(recipients)}\\nالنتيجة: {detail}\\nالموضوع: {subject}")
     return ok, detail
 
@@ -128,7 +131,10 @@ def notify_user(email, code, data):
         return False, "لا يوجد بريد للمستخدم"
     subject,body=render_email(code,data)
     subject=_email_subject(subject,data)
-    ok, detail=send_email([email], subject, body)
+    try:
+        ok, detail=send_email([email], subject, body)
+    except Exception as exc:
+        ok, detail=False, f"فشل إرسال البريد: {exc}"
     audit("إرسال بريد للمستخدم", "email", None, f"إلى: {email}\\nالنتيجة: {detail}\\nالموضوع: {subject}")
     return ok, detail
 
